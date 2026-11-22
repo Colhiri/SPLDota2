@@ -2,7 +2,7 @@
   "source": {
     "panorama/layout/custom_game/custom_ui_manifest.xml": "D0183939F8CF289EB3765806EBB7917C297449F68A5A505E81E66452EB5740B2",
     "panorama/layout/custom_game/offline_league_draft.xml": "3C5937B596B2EC5BAE7DAE5E8B1257BDCD0A94F08730410AF688054158F7C259",
-    "panorama/layout/custom_game/offline_league_match.xml": "DACD548D8A52A455648905713D708C167FE7BDAFC8239B09C42A5FFF0374FCF6",
+    "panorama/layout/custom_game/offline_league_match.xml": "985F58559EC0D5E252009396B61FDDB0BF985152475B861FE639AF9A78884E3E",
     "panorama/layout/custom_game/offline_league_result.xml": "BB4458BC9D9DFBACAE986E0E7DA8DD30724F67027EE4742FFC268BB21B1DFC79",
     "panorama/layout/custom_game/offline_league_setup.xml": "624071D6369E98D68F81A0401A5F7997FB48C227ED1A85FC8F8DC1D254FF334B",
     "panorama/layout/custom_game/offline_league_social_hud.xml": "32CB54F994DB626C39B9CDF1719C33AFFD1F41C65C8018BE8641A93975EC3F0B",
@@ -10,15 +10,16 @@
     "panorama/scripts/custom_game/offline_league_screen.js": "7C4080607E294822D0EE6964D43F1847DBAD52FD5EA68B5376C5318F73B07182",
     "panorama/scripts/custom_game/offline_league_social_hud.js": "3AE545B21847DE7DBEF770423E953F3DB98B440BA267C2E2EC0004B386880AEC",
     "panorama/scripts/custom_game/offline_league.js": "B7882565ED8A05D209BECBBC70C23D322AF84CFA7864C48A4B8D717030BF3668",
-    "panorama/styles/custom_game/offline_league_match.css": "38867E1CEBC1388CD6FC918A70F229C69451D5CE775F3E1CCDCDE53C91C9D5F6",
+    "panorama/styles/custom_game/offline_league_match.css": "237AA10A0CB15840E57F80826F0BF5B7B85F358BD3DCB40C32FBAE769D7D7F49",
     "panorama/styles/custom_game/offline_league_social_hud.css": "B74CAA958CE925E1D624E9D699F16DBC7058388BD6E30298B6604B1B2E2663EC",
-    "panorama/styles/custom_game/offline_league.css": "A83A78BB4C9E9C121F6B1F8C8B7D90B0B635DC52A3ADEC60F637A06A64096E60"
+    "panorama/styles/custom_game/offline_league.css": "A83A78BB4C9E9C121F6B1F8C8B7D90B0B635DC52A3ADEC60F637A06A64096E60",
+    "panorama/scripts/custom_game/offline_league_inspect.js": "69FDFFB3E70F1148B6A3A3E8709B96E100951290F09AF08BD94A19D2CD101915"
   },
   "resources": {
     "panorama/layout/custom_game/custom_ui_manifest.vxml_c": "6AC04E4C72DC585345D6BB7CA5FA5FFFBC7F586ED93AD0710704F65C7A3D5B77",
     "panorama/layout/custom_game/offline_league_draft.vxml_c": "7C31AC172227CBB7811B79EAB79AEDD5DCF01CAE8C48F894158B46FE540B1888",
     "panorama/layout/custom_game/offline_league_match.css.vxml_c": "C2B1D078DB18FEA4672DC3166E787BB9F4FD8FDA7A670C55BDF4052FA98782C5",
-    "panorama/layout/custom_game/offline_league_match.vxml_c": "C301802DC9C3040706F301894901162D247A9F1984C3BB6FEA369EB31B7BA1D6",
+    "panorama/layout/custom_game/offline_league_match.vxml_c": "B718DF8681B271081B97456153A2E04A9F2EA0843EFF69499CF73E7AAD753CF1",
     "panorama/layout/custom_game/offline_league_result.vxml_c": "53788575D5FC0AC23B12B18B2BA7146E1C6212985821D475B360B13B56BA0406",
     "panorama/layout/custom_game/offline_league_setup.vxml_c": "15F69D1036A0680881732DD2E3E3E95CEAD559CBC030A97928618332502CD260",
     "panorama/layout/custom_game/offline_league_social_hud.css.vxml_c": "40E83C781FD6ABDE0AE7C03205B911279CE6B35A9FF8403AD0579991D987F440",
@@ -28,8 +29,9 @@
     "panorama/scripts/custom_game/offline_league_screen.vjs_c": "059A84B263435577D429A5C179F9E8F4AF379B80794EFD6E346C039ED9BE9F7B",
     "panorama/scripts/custom_game/offline_league_social_hud.vjs_c": "FB0F259673CC7ACE0522C96028DA6FBE836DD5466830D7DBB27DCEC7BE6A9945",
     "panorama/scripts/custom_game/offline_league.vjs_c": "52A24231F1E38A3102BD7101CFF1F1AD121A00CB165067CCF12D9857E07F7C8F",
-    "panorama/styles/custom_game/offline_league_match.vcss_c": "38E2E1E29FEB0F54EDC9E44376E3287D450AF0DC95244AAF6745DFE2444D53DD",
+    "panorama/styles/custom_game/offline_league_match.vcss_c": "31F06C41D7BFB0801EF1B9E33F1242FBBBFC9EDA7EEEE13E34260AB237CBFEBB",
     "panorama/styles/custom_game/offline_league_social_hud.vcss_c": "B27B4C39040794388B0379D875AF5021CCBE13A712AFD858F4197B6DBD977B9B",
-    "panorama/styles/custom_game/offline_league.vcss_c": "0CDADD348BCF140818B01E3728ADBD47EE6DEE11E82CA7D2CA9316C79CE84C05"
+    "panorama/styles/custom_game/offline_league.vcss_c": "0CDADD348BCF140818B01E3728ADBD47EE6DEE11E82CA7D2CA9316C79CE84C05",
+    "panorama/scripts/custom_game/offline_league_inspect.vjs_c": "4FC11560979EF787F275B6A8CB97C2E3379CEAF19270757883E0943EA5480853"
   }
 }

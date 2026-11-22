@@ -118,3 +118,52 @@
     border-color: #4E5754;
     background-color: #303837;
 }
+
+.LeagueAllyInspection {
+    horizontal-align: left;
+    vertical-align: bottom;
+    margin-left: 16px;
+    margin-bottom: 270px;
+    width: 192px;
+    padding: 9px;
+    flow-children: down;
+    background-color: #142020F5;
+    border: 1px solid #52675D;
+    border-top: 2px solid #85A896;
+}
+
+.LeagueInspectHeader {
+    flow-children: right;
+    margin-bottom: 7px;
+}
+
+.LeagueInspectPortrait {
+    width: 48px;
+    height: 27px;
+}
+
+.LeagueInspectName {
+    margin-left: 8px;
+    vertical-align: center;
+    color: #E4EEE8;
+    font-size: 16px;
+}
+
+.LeagueInspectedItems {
+    width: 174px;
+    flow-children: right-wrap;
+}
+
+.LeagueInspectItem, .LeagueInspectBackpack {
+    width: 54px;
+    height: 39px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    background-color: #0D1415;
+    border: 1px solid #3E514D;
+}
+
+.LeagueInspectBackpack {
+    saturation: 0.65;
+    border-color: #253734;
+}
