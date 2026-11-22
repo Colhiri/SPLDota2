@@ -4,19 +4,11 @@
     </styles>
     <scripts>
         <include src="file://{resources}/scripts/custom_game/offline_league_match.js" />
-        <include src="file://{resources}/scripts/custom_game/offline_league_inspect.js" />
     </scripts>
     <Panel class="LeagueMatchHud LeagueLeaveHidden" hittest="false" hittestchildren="true">
         <Button id="LeagueLeaveButton" class="LeagueLeaveButton" tabindex="0">
             <Panel class="LeagueReturnIcon" hittest="false" />
         </Button>
-        <Panel id="LeagueAllyInspection" class="LeagueAllyInspection LeagueLeaveHidden" hittest="false">
-            <Panel class="LeagueInspectHeader" hittest="false">
-                <DOTAHeroImage id="LeagueInspectedHeroPortrait" class="LeagueInspectPortrait" heroimagestyle="landscape" hittest="false" />
-                <Label id="LeagueInspectedHeroName" class="LeagueInspectName" hittest="false" />
-            </Panel>
-            <Panel id="LeagueInspectedItems" class="LeagueInspectedItems" hittest="false" />
-        </Panel>
         <Panel id="LeagueLeaveBackdrop" class="LeagueLeaveBackdrop LeagueLeaveHidden">
             <Panel class="LeagueLeaveDialog">
                 <Label class="LeagueLeaveTitle" text="Выйти в лигу?" />

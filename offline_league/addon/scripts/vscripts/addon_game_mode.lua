@@ -395,17 +395,17 @@ function LEAGUE:applyMatchControls()
         botControl = Convars:GetBool(BOT_HUMAN_CONTROL),
         unitQuery = Convars:GetBool(UNIT_QUERY_PANEL),
     }
-    -- The local client can inspect a unit while retaining its own hero selection.
-    if self.matchControls.unitQuery == false then
-        Convars:SetBool(UNIT_QUERY_PANEL, true)
+    -- Show inspected units in the standard bottom HUD.
+    if self.matchControls.unitQuery == true then
+        Convars:SetBool(UNIT_QUERY_PANEL, false)
     end
 end
 
 function LEAGUE:restoreMatchControls()
     local controls = self.matchControls
     if not controls then return end
-    if controls.unitQuery == false then
-        Convars:SetBool(UNIT_QUERY_PANEL, false)
+    if controls.unitQuery == true then
+        Convars:SetBool(UNIT_QUERY_PANEL, true)
     end
     if controls.botControl ~= nil then
         Convars:SetBool(BOT_HUMAN_CONTROL, controls.botControl)
@@ -555,6 +555,16 @@ function LEAGUE:assignBotDifficulties()
     end
     self:restoreBotSettings()
     Convars:SetBool(BOT_HUMAN_CONTROL, false)
+    -- BotPopulate can grant the local player control while cheats are on. Reapply each
+    -- bot's own player ID after restoring cheats so Dota rebuilds its control mask.
+    for _, playerID in pairs(mapped) do
+        if playerID ~= self.playerID then
+            local hero = PlayerResource:GetSelectedHeroEntity(playerID)
+            if hero then
+                hero:SetControllableByPlayer(playerID, true)
+            end
+        end
+    end
     -- Disabling cheats restores dota_bot_disable to its custom-game default.
     Convars:SetBool("dota_bot_disable", false)
     print(("[offline-league] Set bot difficulty to %d for %d/9 bots")
