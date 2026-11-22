@@ -14,8 +14,8 @@
                     <Panel class="HeaderEmblemMark" />
                 </Panel>
                 <Panel class="PageTitleBlock">
-                    <Label class="PageTitle" text="Локальная лига" />
-                    <Label class="PageSubtitle" text="Рейтинговые матчи 5 на 5" />
+                    <Label class="PageTitle" text="SPLDota2" />
+                    <Label class="PageSubtitle" text="Single Player League" />
                 </Panel>
                 <Button id="RefreshButton" class="SecondaryButton RefreshButton IsHidden">
                     <Label text="Обновить профиль" />

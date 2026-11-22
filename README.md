@@ -2,7 +2,7 @@
   <kbd><strong>English</strong></kbd> &nbsp; · &nbsp; <a href="README.ru.md">Русский</a>
 </p>
 
-# Dota Offline League
+# SPLDota2 — Single Player League
 
 A local Dota 2 league for Windows. Pick your role, draft any available hero, and play a full 5v5 with four allied bots and five opponents. Radiant and Dire can each have their own coach. The league keeps your rating, scoreboards, and available replays in one place.
 
@@ -17,14 +17,14 @@ You need Windows, Steam with Dota 2 installed, Python **3.11 or later**, and a s
 3. Set your difficulty, choose a position, and select **Найти матч** (Find Match). Pick your hero in Dota's hero selector.
 4. After the match, review the saved scoreboard and choose **Вернуться в лигу** (Return to League). Open a match in **История матчей** (Match History) for the full scoreboard and replay when the recording is available.
 
-To enter from Dota's main menu, run `.\Играть.cmd -FromDotaMenu` and enter `offline_league` in the game console. [Setup and menu entry](offline_league/README.en.md#enter-from-the-dota-menu)
+To enter from Dota's main menu, run `.\Играть.cmd -FromDotaMenu` and enter `spldota2` in the game console. [Setup and menu entry](offline_league/README.en.md#enter-from-the-dota-menu)
 
 ## Master prompt for both coaches
 
 Use a project chat on the machine running the league. The project needs local terminal access and the ability to create or resume two visible chats.
 
 ```text
-Set up both Dota Offline League coaches in two separate visible chats in this project.
+Set up both SPLDota2 coaches in two separate visible chats in this project.
 Create or resume “Radiant Coach” and “Dire Coach”. Use this repository as the
 working directory for both chats.
 

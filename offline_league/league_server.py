@@ -1,4 +1,4 @@
-"""Local profile, matchmaking, and match history for Dota Offline League."""
+"""Local profile, matchmaking, and match history for SPLDota2."""
 
 from __future__ import annotations
 
@@ -879,7 +879,7 @@ def main():
     with LeagueHTTPServer(league, args.port, ipc) as server:
         if ipc is not None:
             ipc.start()
-        print(f"Dota Offline League: http://{HOST}:{server.server_port}", flush=True)
+        print(f"SPLDota2: http://{HOST}:{server.server_port}", flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:

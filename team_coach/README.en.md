@@ -4,7 +4,7 @@
 
 [Project home](../README.md) · [Gameplay](../docs/gameplay.md) · [League setup](../offline_league/README.en.md)
 
-# Team coaches
+# SPLDota2 team coaches
 
 Each coach reads the latest observations available to its own team and can submit structured plans for the bots to execute. Open Hyper AI continues to handle each hero's actions. The server validates each plan against the current match, eligible bots and targets, and the order's expiry.
 

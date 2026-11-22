@@ -2,7 +2,7 @@
   <a href="README.en.md">English</a> &nbsp; · &nbsp; <kbd><strong>Русский</strong></kbd>
 </p>
 
-# Тренер Open Hyper AI
+# Подключение тренеров SPLDota2
 
 [Главная проекта](../README.ru.md) · [Игровой цикл](../docs/gameplay.ru.md) · [Справка по запуску](../offline_league/README.md)
 

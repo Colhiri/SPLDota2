@@ -408,7 +408,7 @@ try {
     $install = Get-DotaInstall $SteamPath $DotaPath $WorkshopPath
     if ($Action -eq 'Server') {
         Start-LeagueServer $install
-        Write-Output 'The local league service is ready.'
+        Write-Output 'The SPLDota2 service is ready.'
         exit 0
     }
     if ($Action -eq 'Coaches') {
@@ -443,7 +443,7 @@ try {
     if ((Get-Process -Name dota2 -ErrorAction SilentlyContinue)) {
         if ($Action -in 'Play', 'Prepare' -and (Get-LeagueHealth).file_ipc) {
             Start-LeagueCoaches $install
-            Write-Output 'В консоли Dota выполни offline_league или dota_launch_custom_game offline_league dota.'
+            Write-Output 'В консоли Dota выполни spldota2 или dota_launch_custom_game offline_league dota.'
             exit 0
         }
         throw 'Для первой установки закрой Dota 2 и снова открой «Играть.cmd».'
@@ -458,7 +458,7 @@ try {
     Build-LeaguePanorama $install
     Prepare-LeagueBotScripts $install
     if ($Action -eq 'Install') {
-        Write-Output 'The Local League addon is installed.'
+        Write-Output 'The SPLDota2 add-on is installed.'
         exit 0
     }
 
@@ -467,11 +467,11 @@ try {
     $steamArgs = @('-applaunch', '570', '-novid', '-console', '-condebug', '-con_logfile', 'offline_league.log',
         '-offline_league_file_ipc', '+exec', 'offline_league.cfg')
     if ($Action -eq 'Prepare') {
-        Write-Output 'Лига и оба сервера тренеров готовы к запуску из Dota.'
+        Write-Output 'SPLDota2 и оба сервера тренеров готовы к запуску из Dota.'
         exit 0
     }
     if (!$FromDotaMenu) {
-        $steamArgs += '+offline_league'
+        $steamArgs += '+spldota2'
     }
     Start-Process -FilePath $install.Steam -ArgumentList $steamArgs -WindowStyle Hidden
 } catch {

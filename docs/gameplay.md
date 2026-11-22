@@ -6,7 +6,7 @@
 
 # Gameplay and bot behavior
 
-Dota Offline League adds a league menu to the local Dota 2 client. You play for Radiant in a 5v5 with four allied bots and five Dire bots on the standard map. The league adds role-based matchmaking, a persistent local rating, two team coaches, and match history.
+SPLDota2 adds a league menu to the local Dota 2 client. You play for Radiant in a 5v5 with four allied bots and five Dire bots on the standard map. The league adds role-based matchmaking, a persistent local rating, two team coaches, and match history.
 
 ## How a match works
 

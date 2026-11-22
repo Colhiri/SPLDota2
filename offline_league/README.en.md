@@ -4,7 +4,7 @@
 
 [Project home](../README.md) · [Gameplay](../docs/gameplay.md) · [Coach setup](../team_coach/README.en.md)
 
-# League setup and troubleshooting
+# SPLDota2 setup and troubleshooting
 
 ## Install and launch
 
@@ -15,8 +15,8 @@ The default coach mode is `observe`. The server status at the bottom of the menu
 ## Enter from the Dota menu
 
 1. Run `.\Играть.cmd -FromDotaMenu` in PowerShell. This starts the services and opens Dota's main menu.
-2. Open the game console and enter `offline_league`.
-3. To use a shortcut, enter `bind F8 offline_league` after the alias has loaded.
+2. Open the game console and enter `spldota2`.
+3. To use a shortcut, enter `bind F8 spldota2` after the alias has loaded.
 
 For repeated launches from Steam, prepare the add-on and services from the repository root. Run this after an update and again if the services have stopped.
 
@@ -24,7 +24,7 @@ For repeated launches from Steam, prepare the add-on and services from the repos
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\offline_league\Launch-League.ps1 -Action Prepare
 ```
 
-Set the following Dota properties in Steam's launch options, then enter `offline_league` in the game console or use the bound key.
+Set the following Dota properties in Steam's launch options, then enter `spldota2` in the game console or use the bound key.
 
 ```text
 -console -condebug -con_logfile offline_league.log -offline_league_file_ipc +exec offline_league.cfg
@@ -34,7 +34,7 @@ Set the following Dota properties in Steam's launch options, then enter `offline
 
 - **Сложность** (Difficulty) controls bot difficulty, micro, macro, and coaching strength for both teams. Settings apply to the next queue. Micro affects additional lane, spell, and item decisions. Macro controls the strength of automatic team plans. Coaching strength controls how often coaches can reconsider a plan.
 - **Вернуться в лигу** (Return to League) closes the saved result screen and returns to your profile. During a draft or an active game, the top-left back arrow asks for confirmation and cancels the unfinished match without a rating change.
-- **История матчей** (Match History) opens saved match details. **Смотреть повтор** (Watch Replay) appears when the local Dota `.dem` is available. Use Dota's replay exit control, then enter `offline_league` to return. Earlier matches display the stats that were saved at the time.
+- **История матчей** (Match History) opens saved match details. **Смотреть повтор** (Watch Replay) appears when the local Dota `.dem` is available. Use Dota's replay exit control, then enter `spldota2` to return. Earlier matches display the stats that were saved at the time.
 - **Меню Dota** (Dota Menu) exits the league itself.
 
 The local profile and history live in `%LOCALAPPDATA%\Dota Offline League\league.sqlite3`. The league uses Dota's local replay files for playback. Keep both the database and the available `.dem` files if you move your installation.
