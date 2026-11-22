@@ -370,7 +370,7 @@ function Prepare-LeagueBotScripts {
     $module = Join-Path $workspace 'team_coach'
     $botRoot = Join-Path $Install.Game 'dota/scripts/vscripts/bots'
     $stamp = Join-Path $botRoot '.league-script-revision'
-    $sources = @('install.py', 'adapter.lua', 'fight_adapter.lua', 'league_roles.py', 'league_roles.lua', 'workshop_compat.py')
+    $sources = @('install.py', 'adapter.lua', 'fight_adapter.lua', 'league_roles.py', 'league_roles.lua', 'workshop_compat.py', 'skill_progression.lua')
     $revision = ($sources | ForEach-Object {
         (Get-FileHash -LiteralPath (Join-Path $module $_) -Algorithm SHA256).Hash
     }) -join ':'

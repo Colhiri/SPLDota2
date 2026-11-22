@@ -9,6 +9,10 @@ local OPEN_LEAGUE_COMMAND = "dota_launch_custom_game offline_league dota"
 local IPC_POLL_INTERVAL = 0.2
 local IPC_REQUEST_TIMEOUT = 10
 local DEFAULT_BOT_DIFFICULTY = 4
+local BOT_HUMAN_CONTROL = "dota_bot_allow_human_control"
+local UNIT_QUERY_PANEL = "dota_hud_new_query_panel"
+local SHARE_HERO = 1
+local SHARE_UNITS = 2
 local LEAGUE = {}
 local ANCIENT_GUARD = "modifier_offline_league_ancient"
 
@@ -357,6 +361,13 @@ function LEAGUE:allowOrder(order)
     if self.playerID == nil or order.issuer_player_id_const ~= self.playerID then
         return true
     end
+    if order.order_type == DOTA_UNIT_ORDER_TRAIN_ABILITY and (order.entindex_ability or 0) > 0 then
+        local ability = EntIndexToHScript(order.entindex_ability)
+        local caster = optional(ability, "GetCaster")
+        if caster and caster:GetPlayerOwnerID() ~= self.playerID then
+            return false
+        end
+    end
     for _, index in pairs(order.units or {}) do
         local unit = EntIndexToHScript(index)
         if unit then
@@ -379,6 +390,29 @@ function LEAGUE:setup()
     self.mode:SetExecuteOrderFilter(Dynamic_Wrap(LEAGUE, "allowOrder"), self)
 end
 
+function LEAGUE:applyMatchControls()
+    self.matchControls = {
+        botControl = Convars:GetBool(BOT_HUMAN_CONTROL),
+        unitQuery = Convars:GetBool(UNIT_QUERY_PANEL),
+    }
+    -- The local client can inspect a unit while retaining its own hero selection.
+    if self.matchControls.unitQuery == false then
+        Convars:SetBool(UNIT_QUERY_PANEL, true)
+    end
+end
+
+function LEAGUE:restoreMatchControls()
+    local controls = self.matchControls
+    if not controls then return end
+    if controls.unitQuery == false then
+        Convars:SetBool(UNIT_QUERY_PANEL, false)
+    end
+    if controls.botControl ~= nil then
+        Convars:SetBool(BOT_HUMAN_CONTROL, controls.botControl)
+    end
+    self.matchControls = nil
+end
+
 function LEAGUE:applyBotSettings()
     self.botSettings = {
         cheats = optional(Convars, "GetBool", "sv_cheats") == true,
@@ -387,6 +421,7 @@ function LEAGUE:applyBotSettings()
     }
     -- BotPopulate uses the engine's local development path in a custom game.
     Convars:SetBool("sv_cheats", true)
+    Convars:SetBool(BOT_HUMAN_CONTROL, false)
     self:applyForcedPicks()
     local tuning = self.match.tuning or {}
     local level = tonumber(tuning.bot_difficulty) or DEFAULT_BOT_DIFFICULTY
@@ -438,6 +473,7 @@ function LEAGUE:queue(playerID, role)
         self.playerID = playerID
         self.started = true
         PlayerResource:SetCustomTeamAssignment(playerID, RADIANT)
+        self:applyMatchControls()
         self:applyBotSettings()
         self:publish("starting", "Матч найден. Начинается выбор героев.")
         print("[offline-league] Match queued " .. self.match.id)
@@ -496,6 +532,13 @@ function LEAGUE:assignBotDifficulties()
         local slot = tonumber(participant.slot)
         local playerID = mapped[slot]
         if playerID ~= nil and playerID ~= self.playerID then
+            if PlayerResource:GetTeam(playerID) == PlayerResource:GetTeam(self.playerID) then
+                local share = optional(PlayerResource, "GetUnitShareMaskForPlayer", playerID, self.playerID)
+                if type(share) == "number" and share % 4 ~= 0 then
+                    PlayerResource:SetUnitShareMaskForPlayer(playerID, self.playerID, SHARE_HERO, false)
+                    PlayerResource:SetUnitShareMaskForPlayer(playerID, self.playerID, SHARE_UNITS, false)
+                end
+            end
             local hero = PlayerResource:GetSelectedHeroEntity(playerID)
             if hero and type(hero.SetBotDifficulty) == "function" then
                 if not self.assignedDifficulty[playerID] then
@@ -511,6 +554,7 @@ function LEAGUE:assignBotDifficulties()
         return 0.25
     end
     self:restoreBotSettings()
+    Convars:SetBool(BOT_HUMAN_CONTROL, false)
     -- Disabling cheats restores dota_bot_disable to its custom-game default.
     Convars:SetBool("dota_bot_disable", false)
     print(("[offline-league] Set bot difficulty to %d for %d/9 bots")
@@ -755,6 +799,7 @@ function LEAGUE:stateChanged()
     elseif state == DOTA_GAMERULES_STATE_POST_GAME and self.played then
         self:stopReplay()
         self:finishPostGame()
+        self:restoreMatchControls()
     end
 end
 
@@ -820,6 +865,7 @@ function LEAGUE:leave()
         self.match = nil
         self:stopReplay()
         self:restoreBotSettings()
+        self:restoreMatchControls()
         print("[offline-league] Left unfinished match " .. identity)
         SendToServerConsole(OPEN_LEAGUE_COMMAND)
     end)
@@ -853,7 +899,10 @@ function Activate()
     league.fileIPC = optional(GlobalSys, "CommandLineCheck", IPC_ARGUMENT) == true
     league:setup()
     ListenToGameEvent("game_rules_state_change", function() league:stateChanged() end, nil)
-    ListenToGameEvent("game_rules_shutdown", function() league:restoreBotSettings() end, nil)
+    ListenToGameEvent("game_rules_shutdown", function()
+        league:restoreBotSettings()
+        league:restoreMatchControls()
+    end, nil)
     ListenToGameEvent("entity_killed", function(event)
         league:onAncientKilled(event)
         socialPlay.onEntityKilled(league, event)

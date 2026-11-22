@@ -1,5 +1,6 @@
 """Repair known Lua API mismatches in the staged Open Hyper AI scripts."""
 
+import re
 from pathlib import Path
 
 
@@ -109,8 +110,31 @@ _WINDRANGER_FIXES = (
 )
 
 
+_SKILL_POINTS_CHECK = re.compile(
+    rb"\bif\s*#(?P<skills>\w+)\s*>=\s*1\s+and\s+"
+    rb"(?P<bot>\w+):GetAbilityPoints\(\)\s*>\s*0\s+then\b"
+)
+
+
+def _patch_talent_progression(stage: Path) -> None:
+    usage = stage / "ability_item_usage_generic.lua"
+    if not usage.is_file():
+        return
+    original = usage.read_bytes()
+    checks = list(_SKILL_POINTS_CHECK.finditer(original))
+    if len(checks) != 1:
+        return
+    check = checks[0]
+    hook = b"\nleagueSkillProgression.learn(" + check["bot"] + b", " + check["skills"] + b")\n"
+    load = b'local leagueSkillProgression = require(GetScriptDirectory() .. "/team_coach_skill_progression")\n'
+    module = Path(__file__).with_name("skill_progression.lua")
+    (stage / "team_coach_skill_progression.lua").write_bytes(module.read_bytes())
+    usage.write_bytes(load + original[:check.start()] + hook + original[check.start():])
+
+
 def patch_workshop_compat(stage: Path) -> None:
     """Apply unambiguous matches and leave other Workshop versions alone."""
+    _patch_talent_progression(stage)
     for relative, fixes, require_all in (
         ("FuncLib/systems/dispel.lua", _DISPEL_FIXES, False),
         ("FuncLib/systems/defend.lua", _DEFEND_FIXES, False),
