@@ -1,6 +1,6 @@
 ﻿[CmdletBinding()]
 param(
-    [ValidateSet('Play', 'Install', 'Server', 'Coaches', 'Tools', 'Check')]
+    [ValidateSet('Play', 'Prepare', 'Install', 'Server', 'Coaches', 'Tools', 'Check')]
     [string]$Action = 'Play',
     [string]$SteamPath,
     [string]$DotaPath,
@@ -8,7 +8,8 @@ param(
     [ValidateSet('observe', 'rules', 'model')]
     [string]$CoachMode = 'observe',
     [ValidatePattern('^[a-zA-Z0-9_.-]+$')]
-    [string]$Model
+    [string]$Model,
+    [switch]$FromDotaMenu
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,7 +22,7 @@ $serverScript = Join-Path $PSScriptRoot 'league_server.py'
 $workspace = Split-Path -Parent $PSScriptRoot
 $dataDir = Join-Path $env:LOCALAPPDATA 'Dota Offline League'
 $healthUrl = 'http://127.0.0.1:32157/health'
-$serviceSchema = 4
+$serviceSchema = 5
 $resourceTypes = @{'.xml' = '.vxml_c'; '.js' = '.vjs_c'; '.css' = '.vcss_c'}
 
 function Get-DotaInstall {
@@ -96,6 +97,7 @@ function Copy-LeagueAddon {
         Copy-Item -Destination $Install.Runtime -Recurse -Force
     Copy-Item -LiteralPath (Join-Path $addonSource 'panorama') -Destination $Install.Content -Recurse -Force
     Copy-Item -LiteralPath $addonInfo -Destination $Install.Content -Force
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'offline_league.cfg') -Destination (Join-Path $Install.Game 'dota/cfg') -Force
 }
 
 function Get-LeagueResources {
@@ -223,17 +225,22 @@ function Get-LeaguePython {
 function Start-LeagueServer {
     param($Install)
     $status = Get-LeagueHealth
-    if ($status.service -eq 'dota_offline_league' -and $status.schema -eq $serviceSchema -and $status.file_ipc -eq $true) {
+    if ($status.service -eq 'dota_offline_league') {
+        $compatible = $status.schema -eq $serviceSchema -and $status.file_ipc -eq $true
         $owner = Get-NetTCPConnection -State Listen -LocalPort 32157 | Select-Object -ExpandProperty OwningProcess -Unique
         $running = Get-CimInstance Win32_Process -Filter "ProcessId=$owner"
         $latestSource = Get-Item -LiteralPath $serverScript, (Join-Path $PSScriptRoot 'league_social.py') |
             Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
         $managed = $running.Name -eq 'python.exe' -and $running.CommandLine -like ('*' + $serverScript + '*')
-        if (!$managed -or $latestSource.LastWriteTimeUtc -le $running.CreationDate.ToUniversalTime() -or
-            (Get-Process -Name dota2 -ErrorAction SilentlyContinue)) { return }
-        Stop-Process -Id $owner
-        Wait-Process -Id $owner -Timeout 5 -ErrorAction SilentlyContinue
-        $status = $null
+        $dotaRunning = Get-Process -Name dota2 -ErrorAction SilentlyContinue
+        if ($compatible -and (!$managed -or $latestSource.LastWriteTimeUtc -le $running.CreationDate.ToUniversalTime() -or $dotaRunning)) {
+            return
+        }
+        if ($managed -and !$dotaRunning) {
+            Stop-Process -Id $owner
+            Wait-Process -Id $owner -Timeout 5 -ErrorAction SilentlyContinue
+            $status = $null
+        }
     }
     if ($status) {
         throw 'Порт 32157 уже занят. Заверши старый процесс локальной лиги или другое приложение, использующее этот порт.'
@@ -251,7 +258,8 @@ function Start-LeagueServer {
     $database = Join-Path $dataDir 'league.sqlite3'
     $pythonArgs += @(('"' + $serverScript + '"'), '--db', ('"' + $database + '"'),
         '--ipc-log', ('"' + $Install.ConsoleLog + '"'), '--ipc-dir', ('"' + $Install.IpcDirectory + '"'),
-        '--role-file', ('"' + $Install.RoleFile + '"'))
+        '--role-file', ('"' + $Install.RoleFile + '"'),
+        '--replay-dir', ('"' + (Join-Path $Install.Game 'dota') + '"'))
     $processOptions = @{
         FilePath = $python.Source
         ArgumentList = $pythonArgs
@@ -433,7 +441,12 @@ try {
     }
 
     if ((Get-Process -Name dota2 -ErrorAction SilentlyContinue)) {
-        throw 'Dota 2 уже запущена. Заверши текущий матч, закрой клиент и снова открой «Играть.cmd».'
+        if ($Action -in 'Play', 'Prepare' -and (Get-LeagueHealth).file_ipc) {
+            Start-LeagueCoaches $install
+            Write-Output 'В консоли Dota выполни offline_league или dota_launch_custom_game offline_league dota.'
+            exit 0
+        }
+        throw 'Для первой установки закрой Dota 2 и снова открой «Играть.cmd».'
     }
 
     Copy-LeagueAddon $install
@@ -452,8 +465,14 @@ try {
     Start-LeagueServer $install
     Start-LeagueCoaches $install
     $steamArgs = @('-applaunch', '570', '-novid', '-console', '-condebug', '-con_logfile', 'offline_league.log',
-        '-offline_league_file_ipc', '+sv_lan', '1',
-        '+dota_launch_custom_game', $addonName, 'dota')
+        '-offline_league_file_ipc', '+exec', 'offline_league.cfg')
+    if ($Action -eq 'Prepare') {
+        Write-Output 'Лига и оба сервера тренеров готовы к запуску из Dota.'
+        exit 0
+    }
+    if (!$FromDotaMenu) {
+        $steamArgs += '+offline_league'
+    }
     Start-Process -FilePath $install.Steam -ArgumentList $steamArgs -WindowStyle Hidden
 } catch {
     [Console]::Error.WriteLine($_.Exception.Message)

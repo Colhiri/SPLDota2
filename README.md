@@ -1,57 +1,56 @@
-# Дока 2
+<p align="center">
+  <kbd><strong>English</strong></kbd> &nbsp; · &nbsp; <a href="README.ru.md">Русский</a>
+</p>
 
-Локальная лига Dota 2 с командными тренерами на Windows. Игра открывает меню лиги, в котором можно настроить сложность, выбрать роль и запустить матч 5 на 5. За Radiant и Dire работают отдельные тренеры. Боты получают линии и роли из драфта лиги, а результаты сохраняются в локальной истории.
+# Dota Offline League
 
-## Что нужно
+A local Dota 2 league for Windows. Pick your role, draft any available hero, and play a full 5v5 with four allied bots and five opponents. Radiant and Dire can each have their own coach. The league keeps your rating, scoreboards, and available replays in one place.
 
-- Windows, Steam, установленная Dota 2 и Python **3.11 или новее**.
-- Подписка на **Open Hyper AI** в Steam Workshop. Дождитесь, пока Steam скачает скрипты ботов. [Страница Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298)
-- **ChatGPT Plus или Pro** с доступом к локальным чатам приложения для запуска двух видимых тренеров. Откройте клонированную папку как проект в приложении. [Тарифы и лимиты](https://developers.openai.com/codex/pricing)
+**[Gameplay and bot behavior](docs/gameplay.md)** · **[Setup and troubleshooting](offline_league/README.en.md)** · **[Coach setup](team_coach/README.en.md)**
 
-## Как начать матч
+## Start playing
 
-1. Закройте Dota 2, если она открыта, и запустите [Играть.cmd](Играть.cmd). Лаунчер находит игру и подписку Workshop, устанавливает аддон и адаптер ботов, запускает локальный сервис лиги и связь с тренерами. Dota сразу открывается в меню лиги.
-2. Откройте вкладку **Сложность**, если хотите изменить уровень ботов, микро, макро или силу тренеров. Настройки применятся к следующему матчу.
-3. Отправьте **один раз** промпт ниже в локальном чате проекта. Дождитесь, пока оба тренера подтвердят готовность и начнут ожидать свежую игровую телеметрию.
-4. В меню лиги выберите роль и нажмите **Найти матч**. На экране пика выберите своего героя. После матча результат, статистика и изменение рейтинга появятся в лиге.
+You need Windows, Steam with Dota 2 installed, Python **3.11 or later**, and a subscription to [Open Hyper AI in Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298). Let Steam finish downloading its bot scripts.
 
-### Промпт для двух тренеров
+1. Close Dota and double-click [Играть.cmd](Играть.cmd). The launcher installs or updates the add-on and bot adapter, starts the league and both coach services, then opens the league inside Dota.
+2. For live coaching in two visible chats, send the [master prompt](#master-prompt-for-both-coaches) once in a local project chat. Wait until both coaches are listening for the next match. For automatic coaching with local rules, use `.\Играть.cmd -CoachMode rules` instead.
+3. Set your difficulty, choose a position, and select **Найти матч** (Find Match). Pick your hero in Dota's hero selector.
+4. After the match, review the saved scoreboard and choose **Вернуться в лигу** (Return to League). Open a match in **История матчей** (Match History) for the full scoreboard and replay when the recording is available.
+
+To enter from Dota's main menu, run `.\Играть.cmd -FromDotaMenu` and enter `offline_league` in the game console. [Setup and menu entry](offline_league/README.en.md#enter-from-the-dota-menu)
+
+## Master prompt for both coaches
+
+Use a project chat on the machine running the league. The project needs local terminal access and the ability to create or resume two visible chats.
 
 ```text
-Запусти тренеров для «Дока 2» в двух отдельных видимых чатах этого проекта.
-Создай «Тренер Radiant» и «Тренер Dire» или возобнови их, если они уже существуют.
-Рабочая папка каждого чата — корень этого репозитория.
+Set up both Dota Offline League coaches in two separate visible chats in this project.
+Create or resume “Radiant Coach” and “Dire Coach”. Use this repository as the
+working directory for both chats.
 
-Тренер Radiant читает team_coach/player-team-session.txt, работает с 127.0.0.1:32125
-и журналом %LOCALAPPDATA%\Dota Offline League\coach-events.jsonl.
-Тренер Dire читает team_coach/opponent-team-session.txt, работает с 127.0.0.1:32126
-и журналом %LOCALAPPDATA%\Dota Offline League\dire-coach-events.jsonl.
+Radiant Coach reads team_coach/player-team-session.txt and connects to
+127.0.0.1:32125. Its log is %LOCALAPPDATA%\Dota Offline League\coach-events.jsonl.
+Dire Coach reads team_coach/opponent-team-session.txt and connects to
+127.0.0.1:32126. Its log is %LOCALAPPDATA%\Dota Offline League\dire-coach-events.jsonl.
 
-В каждом чате сначала проверь /status и сторону. Оба сервиса уже запущены лаунчером
-в режиме observe. Продолжай ждать свежую сессию матча через watcher --follow.
-Веди только свою сторону, читай только её телеметрию и учитывай настройки тренера
-из статуса. Останься на наблюдении до конца матча и дай разбор подтверждённых
-приказов, срывов и того, что команда сделала после них.
+In each chat, verify the team and observe mode via /status. Resolve the log path
+and use python -X utf8 -m team_coach.watch "<log path>" --port <team port> --follow
+to wait for a fresh match session_id. Coach only the assigned team using its
+telemetry and the current coaching settings. Stay connected through the end
+of the match and summarize acknowledged orders, their observed outcomes, and
+any changes of plan.
 
-В этом чате подтверди готовность, когда оба тренера начали ожидать матч.
+Confirm readiness here after both chats are waiting for a match.
 ```
 
-Во время матча союзному тренеру можно писать в командный чат `!пуш топ`, `!пуш мид`, `!пуш бот`, `!рош` или `!отмена`. Тренеры могут заранее назначать отдельные группы на захват и пуш, выбирать инициатора со способностью и готовить запасной шаг. Контроллер проверяет условия на каждом свежем снимке. [Команды и тактические цепочки](team_coach/INTEGRATION.md#тактические-цепочки)
+Try `!push top`, `!push mid`, `!push bot`, `!rosh`, or `!cancel` in the allied team chat. [Player calls and tactical examples](docs/gameplay.md#what-the-bots-can-do)
 
-Профиль, история и журналы хранятся в `%LOCALAPPDATA%\Dota Offline League`. Аддон и собранный интерфейс входят в репозиторий. Лаунчер использует установленную Steam-версию Dota и подписку Workshop. [Настройки, сохранения и диагностика](offline_league/README.md)
+## Run the checks
 
-## Другие способы запуска
-
-- **Лига с локальными правилами.** Запустите `.\Играть.cmd -CoachMode rules` из PowerShell. Этот вариант работает без видимых модельных тренеров. [Параметры лаунчера](offline_league/README.md#параметры-лаунчера)
-- **Командные тренеры в обычном лобби.** Подходит для отдельной проверки адаптера, режимов `rules`, `observe`, `shadow` и фонового `model`. [Запуск тренеров и API](team_coach/README.md) · [Схема установки](team_coach/INTEGRATION.md)
-
-## Проверки
-
-Из корня репозитория запустите тесты лиги и тренеров.
+From the repository root, run the Python tests and use Node.js for the result screen checks.
 
 ```powershell
-python -m unittest discover -s offline_league -p 'test_league_server.py'
-python -m unittest discover -s tests -p 'test_team_coach*.py'
+python -B -m unittest discover -s offline_league -p 'test_league_server.py'
+python -B -m unittest discover -s tests -p 'test_team_coach*.py'
+node offline_league/test_league_result.js
 ```
-
-Для проверки интерфейса лиги с установленным Node.js выполните `node offline_league/test_league_result.js`.

@@ -16,6 +16,7 @@ import sqlite3
 from tempfile import NamedTemporaryFile
 from threading import Event, Thread
 from urllib.parse import parse_qsl, urlsplit
+from urllib.request import urlopen
 from uuid import uuid4
 
 import league_social as social
@@ -27,14 +28,17 @@ PORT = 32157
 CALIBRATION_MATCHES = 5
 CALIBRATION_OFFSETS = (0, 340, -260, 520, -400)
 START_RATING = 1500
-HISTORY_LIMIT = 30
+HISTORY_LIMIT = 12
 HUMAN_SLOT = 0
 BODY_LIMIT = 16_384
 HERO_NAME = re.compile(r"npc_dota_hero_[a-z0-9_]{1,50}\Z")
 MATCH_ID = re.compile(r"[a-f0-9]{32}\Z")
 IPC_REQUEST = re.compile(
-    rb"\[offline-league-ipc\][ \t]+([a-f0-9_]{10,64})[ \t]+(state|settings|queue|draft|finish|cancel)"
+    rb"\[offline-league-ipc\][ \t]+([a-f0-9_]{10,64})[ \t]+(state|settings|queue|draft|finish|cancel|match|coaches|history)"
     rb"(?:[ \t]+([!-~]+))?[ \t]*\Z",
+)
+IPC_FRAGMENT = re.compile(
+    rb"\[offline-league-ipc\][ \t]+([a-f0-9_]{10,64})[ \t]+part[ \t]+(\d{1,2})/(\d{1,2})[ \t]+([!-~]{1,760})[ \t]*\Z",
 )
 IPC_PART_BYTES = 256
 IPC_POLL_SECONDS = 0.1
@@ -51,7 +55,29 @@ MEDALS = (
     (800, "Страж"),
     (0, "Рекрут"),
 )
-STAT_FIELDS = ("kills", "deaths", "assists", "gpm", "xpm", "last_hits", "denies")
+STAT_FIELDS = (
+    "kills", "deaths", "assists", "gpm", "xpm", "last_hits", "denies",
+    "level", "net_worth", "hero_damage", "healing",
+)
+
+
+def coach_status() -> dict:
+    teams = {}
+    for team, port in (("radiant", 32125), ("dire", 32126)):
+        try:
+            with urlopen(f"http://127.0.0.1:{port}/status", timeout=0.5) as response:
+                status = json.load(response)
+            if status.get("team") != team or not status["worker_health"]["telemetry"]["healthy"]:
+                continue
+            session = status.get("coach_session") or {}
+            teams[team] = {
+                "mode": status.get("mode"),
+                "phase": status.get("phase"),
+                "model_ready": bool(session.get("ready") and session.get("initialized")),
+            }
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            continue
+    return teams
 
 
 class RequestError(Exception):
@@ -321,9 +347,10 @@ def participant_stats(payload: dict) -> dict[int, dict]:
 
 
 class League:
-    def __init__(self, database: Path, role_file: Path | None = None):
+    def __init__(self, database: Path, role_file: Path | None = None, replay_dir: Path | None = None):
         self.database = database
         self.role_file = role_file
+        self.replay_dir = replay_dir
         self.database.parent.mkdir(parents=True, exist_ok=True)
         with self.connection() as db:
             db.execute("PRAGMA journal_mode = WAL")
@@ -432,18 +459,22 @@ class League:
             db.execute("UPDATE settings SET tuning = ? WHERE id = 1", (json.dumps(tuning),))
             return self.state(db)
 
-    def state(self, db: sqlite3.Connection, offset: int = 0) -> dict:
+    @staticmethod
+    def history(db: sqlite3.Connection, offset: int = 0) -> dict:
         history = db.execute("""
             SELECT result FROM matches WHERE status = 'complete'
             ORDER BY completed_at DESC, rowid DESC LIMIT ? OFFSET ?
-        """, (HISTORY_LIMIT, offset))
+        """, (HISTORY_LIMIT + 1, offset)).fetchall()
         summary = []
-        for row in history:
+        for row in history[:HISTORY_LIMIT]:
             match = json.loads(row["result"])
             match.pop("participants", None)
             summary.append(match)
+        return {"history": summary, "history_offset": offset, "history_more": len(history) > HISTORY_LIMIT}
+
+    def state(self, db: sqlite3.Connection, offset: int = 0) -> dict:
         result = {
-            "profile": self.profile(db), "history": summary, "social": social.summary(db),
+            "profile": self.profile(db), **self.history(db, offset), "social": social.summary(db),
             "tuning": self.tuning(db),
         }
         active_match = self.pending(db)
@@ -458,7 +489,21 @@ class League:
             ).fetchone()
             if row is None:
                 raise RequestError(404, "Завершённый матч не найден")
-            return {"result": json.loads(row["result"])}
+            result = json.loads(row["result"])
+        return {"result": self.with_replay(result)}
+
+    def with_replay(self, result: dict) -> dict:
+        if self.replay_dir is not None:
+            name = f'offline_league_{result["id"]}'
+            for directory in (self.replay_dir, self.replay_dir / "replays"):
+                try:
+                    with (directory / f"{name}.dem").open("rb") as replay:
+                        if replay.read(8) == b"PBDEMS2\0":
+                            relative = "replays/" if directory != self.replay_dir else ""
+                            return {**result, "replay": relative + name}
+                except OSError:
+                    continue
+        return result
 
     def queue(self, preferred_role: int) -> dict:
         with self.connection(write=True) as db:
@@ -514,7 +559,7 @@ class League:
                 result = json.loads(row["result"])
                 if result["winner"] != winner:
                     raise RequestError(409, "Другой результат матча уже сохранён")
-                return {**self.state(db), "result": result}
+                return {**self.state(db), "result": self.with_replay(result)}
 
             match = json.loads(row["lineup"])
             profile = self.profile(db)
@@ -561,7 +606,7 @@ class League:
             )
             social.complete(db, match, winner, completed)
             self.clear_roles()
-            return {**self.state(db), "result": result}
+            return {**self.state(db), "result": self.with_replay(result)}
 
     def cancel(self, identity: str) -> dict:
         with self.connection(write=True) as db:
@@ -574,13 +619,15 @@ class League:
             return self.state(db)
 
     def dispatch(self, operation: str, payload: dict) -> dict:
+        if operation == "coaches":
+            return coach_status()
         if operation == "settings":
             return self.settings(payload)
-        if operation == "state":
+        if operation in ("state", "history"):
             offset = integer(payload.get("offset", 0), "offset", 0, 1_000_000)
             with self.connection() as db:
                 db.execute("BEGIN")
-                return self.state(db, offset)
+                return self.history(db, offset) if operation == "history" else self.state(db, offset)
         if operation == "queue":
             role = integer(payload.get("role", 0), "role", 0, 5)
             return self.queue(role)
@@ -612,6 +659,7 @@ class LeagueLogIPC:
         self.partial = b""
         self.skip_line = False
         self.pending: dict[str, bytes] = {}
+        self.fragments: dict[bytes, tuple[int, list[bytes]]] = {}
         self.stop_event = Event()
         self.thread = Thread(target=self.run, name="league-file-ipc", daemon=True)
 
@@ -649,6 +697,7 @@ class LeagueLogIPC:
                 if identity != self.identity or info.st_size < self.offset or self.read_anchor(source) != self.anchor:
                     self.identity = identity
                     self.offset, self.anchor, self.partial, self.skip_line = 0, b"", b"", False
+                    self.fragments.clear()
                 source.seek(self.offset)
                 appended = source.read(LOG_READ_BYTES)
                 if appended:
@@ -692,6 +741,28 @@ class LeagueLogIPC:
             del self.pending[identity]
 
     def handle_line(self, line: bytes):
+        fragment = IPC_FRAGMENT.search(line)
+        if fragment:
+            identifier, index, total, part = fragment.groups()
+            number, count = int(index), int(total)
+            if not 1 <= number <= count <= 22:
+                return
+            if number == 1:
+                if len(self.fragments) >= 32:
+                    self.fragments.pop(next(iter(self.fragments)))
+                self.fragments[identifier] = (count, [])
+            expected, parts = self.fragments.get(identifier, (0, []))
+            if count != expected or number != len(parts) + 1:
+                self.fragments.pop(identifier, None)
+                return
+            parts.append(part)
+            if number < count:
+                return
+            del self.fragments[identifier]
+            operation, separator, query = b"".join(parts).partition(b":")
+            if not separator:
+                return
+            line = b"[offline-league-ipc] " + identifier + b" " + operation + b" " + query
         match = IPC_REQUEST.search(line)
         if match is None:
             return
@@ -755,7 +826,7 @@ class LeagueRequestHandler(BaseHTTPRequestHandler):
         if address.path == "/health":
             return {
                 "service": "dota_offline_league",
-                "schema": 4,
+                "schema": 5,
                 "file_ipc": self.server.ipc is not None and self.server.ipc.running,
             }
         return self.server.league.dispatch(address.path.removeprefix("/"), payload)
@@ -794,6 +865,7 @@ def main():
     parser.add_argument("--ipc-log", type=Path)
     parser.add_argument("--ipc-dir", type=Path)
     parser.add_argument("--role-file", type=Path)
+    parser.add_argument("--replay-dir", type=Path)
     args = parser.parse_args()
     if (args.ipc_log is None) != (args.ipc_dir is None):
         parser.error("--ipc-log and --ipc-dir must be supplied together")
@@ -802,7 +874,7 @@ def main():
     if args.role_file is not None and not args.role_file.is_absolute():
         parser.error("--role-file must be an absolute path")
 
-    league = League(args.db, args.role_file)
+    league = League(args.db, args.role_file, args.replay_dir)
     ipc = LeagueLogIPC(league, args.ipc_log, args.ipc_dir) if args.ipc_log is not None else None
     with LeagueHTTPServer(league, args.port, ipc) as server:
         if ipc is not None:

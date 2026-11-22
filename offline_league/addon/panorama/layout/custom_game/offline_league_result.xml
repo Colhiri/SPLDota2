@@ -9,32 +9,11 @@
     <Panel id="LeagueResultCanvas" class="LeagueCanvas ResultCanvas IsHidden" style="visibility: collapse;" hittest="false" hittestchildren="false">
         <Panel class="CanvasTopBevel" hittest="false" />
         <Panel id="ResultShell" class="ResultShell Card">
-            <Label class="ResultEyebrow" text="Локальная лига" />
             <Label id="ResultTitle" class="ResultTitle" text="Матч завершён" />
             <Label id="ResultSubtitle" class="ResultSubtitle" text="Сохраняем результат…" />
             <Panel id="ResultDetails" class="ResultDetails IsHidden">
-                <Panel class="ResultHeroCard">
-                    <Panel id="ResultHeroImage" class="ResultHeroImage" hittest="false" />
-                    <Panel class="ResultHeroLabels">
-                        <Label id="ResultHero" class="ResultHeroName" text="—" />
-                        <Label id="ResultRole" class="ResultSmall" text="—" />
-                    </Panel>
-                </Panel>
-                <Panel class="ResultMetrics">
-                    <Panel class="ResultMetric ResultMetricStart">
-                        <Label class="ResultSmall" text="У / С / П" />
-                        <Label id="ResultKDA" class="ResultMetricValue" text="—" />
-                    </Panel>
-                    <Panel class="ResultMetric">
-                        <Label class="ResultSmall" text="Длительность" />
-                        <Label id="ResultTime" class="ResultMetricValue" text="—" />
-                    </Panel>
-                    <Panel class="ResultMetric">
-                        <Label class="ResultSmall" text="Изменение MMR" />
-                        <Label id="ResultDelta" class="ResultMetricValue" text="—" />
-                    </Panel>
-                </Panel>
                 <Label id="ResultRating" class="ResultRating" />
+                <Panel id="ResultScoreboard" class="Scoreboard" />
             </Panel>
             <Button id="RetrySaveButton" class="PrimaryButton ResultButton IsHidden">
                 <Label text="Повторить сохранение" />

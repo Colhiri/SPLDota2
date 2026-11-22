@@ -16,6 +16,10 @@ from league_server import CALIBRATION_MATCHES, DEFAULT_TUNING, HERO_POOLS, Leagu
 from league_social import SIMULATED_MATCHES_PER_RESULT, chance, roster
 
 
+# Match the game's deadline for file-backed league requests.
+RESPONSE_TIMEOUT = 10
+
+
 class LeagueServiceTests(unittest.TestCase):
     def setUp(self):
         self.temporary = TemporaryDirectory()
@@ -37,7 +41,7 @@ class LeagueServiceTests(unittest.TestCase):
         self.server.server_close()
 
     def request(self, path, payload=None, headers=None):
-        client = HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
+        client = HTTPConnection("127.0.0.1", self.server.server_port, timeout=RESPONSE_TIMEOUT)
         try:
             if payload is None:
                 client.request("GET", path, headers=headers or {})
@@ -54,7 +58,7 @@ class LeagueServiceTests(unittest.TestCase):
         return value
 
     def test_queue_balances_two_role_complete_teams(self):
-        self.assertEqual(self.get("/health")["schema"], 4)
+        self.assertEqual(self.get("/health")["schema"], 5)
         self.assertFalse(self.get("/health")["file_ipc"])
         match = self.get("/queue?role=2")["match"]
         self.assertEqual(match["role"], 2)
@@ -287,7 +291,7 @@ class FileIPCTests(unittest.TestCase):
 
     def reply(self, request_id):
         response = self.replies / f"{request_id}.txt"
-        deadline = monotonic() + 4
+        deadline = monotonic() + RESPONSE_TIMEOUT
         while not response.exists() and monotonic() < deadline:
             sleep(0.01)
         self.assertTrue(response.exists(), f"Missing file reply for {request_id}")
@@ -310,11 +314,11 @@ class FileIPCTests(unittest.TestCase):
             http_thread.start()
             try:
                 with self.subTest("health flag"):
-                    conn = HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                    conn = HTTPConnection("127.0.0.1", server.server_port, timeout=RESPONSE_TIMEOUT)
                     try:
                         conn.request("GET", "/health")
                         payload = json.loads(conn.getresponse().read().decode("utf-8"))
-                        self.assertEqual(payload, {"service": "dota_offline_league", "schema": 4, "file_ipc": True})
+                        self.assertEqual(payload, {"service": "dota_offline_league", "schema": 5, "file_ipc": True})
                     finally:
                         conn.close()
             finally:
@@ -381,6 +385,37 @@ class FileIPCTests(unittest.TestCase):
         self.assertIn("human_role = 4", self.role_file.read_text(encoding="ascii"))
         self.league.finish({"id": match["id"], "winner": 2})
         self.assertEqual(self.role_file.read_text(encoding="ascii"), "return nil\n")
+
+    def test_fragmented_finish_persists_full_scoreboard_and_finds_the_replay(self):
+        self.league = League(self.league.database, replay_dir=self.log.parent)
+        monitor = self.start_monitor()
+        match = self.league.queue(2)
+        identity = match["match"]["id"]
+        rows = ";".join(
+            f"{slot},npc_dota_hero_crystal_maiden,1,2,3,400,500,20,2,15,12000,25000,1200"
+            for slot in range(10)
+        )
+        payload = "finish:" + urlencode({"id": identity, "winner": 2, "stats": rows})
+        parts = [payload[index:index + 760] for index in range(0, len(payload), 760)]
+        for number, part in enumerate(parts, 1):
+            line = f"[VScript] [offline-league-ipc] abcd00000030 part {number}/{len(parts)} {part}\n"
+            self.append(line)
+        status, saved = self.reply("abcd00000030")
+        self.assertTrue(monitor.running)
+        self.assertEqual(status, 200)
+        result = saved["result"]
+        self.assertEqual(len(result["participants"]), 10)
+        self.assertEqual(result["participants"][9]["hero_damage"], 25000)
+        self.assertEqual(result["participants"][9]["net_worth"], 12000)
+        self.assertNotIn("replay", result)
+        replay = self.log.parent / f"offline_league_{identity}.dem"
+        replay.write_bytes(b"incomplete")
+        self.assertNotIn("replay", self.league.match_details(identity)["result"])
+        replay.write_bytes(b"PBDEMS2\0" + b"replay")
+        self.append(f"[VScript] [offline-league-ipc] abcd00000031 match id={identity}\n")
+        status, archived = self.reply("abcd00000031")
+        self.assertEqual(status, 200)
+        self.assertEqual(archived["result"]["replay"], replay.stem)
 
     def test_file_settings_reach_the_next_roster_and_survive_service_restart(self):
         self.league = League(self.league.database, self.role_file)

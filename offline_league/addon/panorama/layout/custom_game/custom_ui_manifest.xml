@@ -1,6 +1,7 @@
 <root>
     <Panel>
         <CustomUIElement type="GameSetup" layoutfile="file://{resources}/layout/custom_game/offline_league_setup.xml" />
+        <CustomUIElement type="EndScreen" layoutfile="file://{resources}/layout/custom_game/offline_league_result.xml" />
         <CustomUIElement type="Hud" layoutfile="file://{resources}/layout/custom_game/offline_league_result.xml" />
         <CustomUIElement type="HeroSelection" layoutfile="file://{resources}/layout/custom_game/offline_league_draft.xml" />
         <CustomUIElement type="Hud" layoutfile="file://{resources}/layout/custom_game/offline_league_match.xml" />

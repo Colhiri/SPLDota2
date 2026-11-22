@@ -107,6 +107,20 @@
                             <Label id="HistoryEmptyTitle" class="EmptyTitle" text="Загрузка истории…" />
                             <Label id="HistoryEmptyNote" class="EmptyNote" />
                         </Panel>
+                        <Panel class="HistoryFooter">
+                            <Label id="HistoryFeedback" class="HistoryFeedback" />
+                            <Button id="HistoryPrevious" class="SecondaryButton IsHidden"><Label text="Назад" /></Button>
+                            <Button id="HistoryNext" class="SecondaryButton IsHidden"><Label text="Далее" /></Button>
+                        </Panel>
+                    </Panel>
+                    <Panel id="ArchivePane" class="HubPane IsHidden">
+                        <Panel class="ArchiveActions">
+                            <Button id="ArchiveBack" class="SecondaryButton"><Label text="К истории" /></Button>
+                            <Label id="ArchiveTitle" class="ArchiveTitle" />
+                            <Button id="ArchiveReplay" class="SecondaryButton IsHidden"><Label text="Смотреть повтор" /></Button>
+                        </Panel>
+                        <Label id="ArchiveStatus" class="ArchiveStatus" />
+                        <Panel id="ArchiveScoreboard" class="Scoreboard ArchiveScoreboard" />
                     </Panel>
                     <Panel id="SocialPane" class="HubPane IsHidden">
                         <Label id="SocialLeagueStats" class="SocialLeagueStats" />
@@ -184,6 +198,8 @@
             <Panel class="StatusBar">
                 <Panel id="StatusDot" class="StatusDot" hittest="false" />
                 <Label id="StatusText" class="StatusText" text="Загрузка профиля…" />
+                <Label id="CoachRadiant" class="CoachStatus" text="Radiant · проверяем связь" />
+                <Label id="CoachDire" class="CoachStatus" text="Dire · проверяем связь" />
             </Panel>
         </Panel>
     </Panel>

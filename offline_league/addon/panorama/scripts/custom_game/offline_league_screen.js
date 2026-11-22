@@ -1,9 +1,6 @@
 (function () {
     "use strict";
 
-    GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_ENDGAME, false);
-    GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_ENDGAME_CHAT, false);
-
     function expandSetup() {
         var panel = $.GetContextPanel();
         while (panel && !panel.BHasClass("CustomUIContainerGameSetup")) {

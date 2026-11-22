@@ -8,12 +8,20 @@
     var rosterId;
     var socialSignature;
     var selectedTab = "history";
-    var resultHero;
-    var resultVisibility;
+    var renderedResult;
+    var history = {};
+    var historyRequest = null;
+    var social;
+    var coaches;
+    var savedResult;
+    var previewResult;
+    var saveWaitExpired = false;
+    var archiveRequest = 0;
+    var archiveResult;
     var returningToLeague = false;
     var returnRequestNumber = 0;
     var returnFeedback = "";
-    var automaticReturnResult;
+    var queuePending = false;
     var tuningDraft;
     var tuningSaved;
     var tuningRequest;
@@ -201,8 +209,9 @@
             var rows = panel("HistoryList");
             rows.RemoveAndDeleteChildren();
             history.forEach(function (entry) {
-                var row = $.CreatePanel("Panel", rows, "");
+                var row = $.CreatePanel("Button", rows, "");
                 row.AddClass("HistoryRow");
+                row.SetPanelEvent("onactivate", function () { openArchive(entry); });
                 var won = checked(entry.won);
                 var outcome = $.CreatePanel("Panel", row, "");
                 outcome.AddClass("ColResult");
@@ -236,6 +245,115 @@
             setText("HistoryEmptyTitle", waiting ? "Загрузка истории…" : (failed ? "История недоступна" : "Матчей пока нет"));
             setText("HistoryEmptyNote", waiting || failed ? "" : "Завершённые матчи появятся здесь.");
         }
+    }
+
+    function renderScoreboard(id, result) {
+        var board = panel(id);
+        board.RemoveAndDeleteChildren();
+        var participants = ordered(result.participants);
+        if (!participants.length) {
+            addLabel(board, "ArchiveStatus", "Статистика участников не сохранилась.");
+            return;
+        }
+        var columns = [
+            ["У / С / П", recordKda],
+            ["Доб./отр.", function (row) { return displayNumber(row.last_hits) + " / " + displayNumber(row.denies); }],
+            ["GPM/XPM", function (row) { return displayNumber(row.gpm) + " / " + displayNumber(row.xpm); }],
+            ["Ценность", function (row) { return groupedNumber(row.net_worth); }],
+            ["Урон", function (row) { return groupedNumber(row.hero_damage); }],
+            ["Лечение", function (row) { return groupedNumber(row.healing); }]
+        ];
+        [2, 3].forEach(function (team) {
+            var side = $.CreatePanel("Panel", board, "");
+            side.AddClass("ScoreSide");
+            var header = $.CreatePanel("Panel", side, "");
+            header.AddClass("ScoreHeader");
+            header.AddClass(team === 2 ? "Radiant" : "Dire");
+            var score = team === 2 ? result.radiant_score : result.dire_score;
+            var teamTitle = (team === 2 ? "Силы Света" : "Силы Тьмы") +
+                (integer(score) === null ? "" : "  ·  " + score);
+            if (team === integer(result.winner)) {
+                teamTitle += "  ·  победа";
+            }
+            addLabel(header, "ScoreIdentity", teamTitle);
+            columns.forEach(function (column) { addLabel(header, "ScoreStat", column[0]); });
+
+            participants.filter(function (row) { return integer(row.team) === team; }).forEach(function (entry) {
+                var row = $.CreatePanel("Panel", side, "");
+                row.AddClass("ScoreRow");
+                row.SetHasClass("ScorePlayer", checked(entry.is_player));
+                var identity = $.CreatePanel("Panel", row, "");
+                identity.AddClass("ScoreIdentity");
+                addHero(identity, "ScoreHeroIcon", entry.hero);
+                var name = checked(entry.is_player) ? "Ты" : (entry.name || "Бот");
+                var level = integer(entry.level);
+                var detail = heroName(entry.hero) + (level === null ? "" : " · " + level + " ур.");
+                addLabel(identity, "ScoreName", name + " · " + detail);
+                columns.forEach(function (column) { addLabel(row, "ScoreStat", column[1](entry)); });
+            });
+        });
+    }
+
+    function openArchive(entry) {
+        archiveResult = null;
+        var request = ++archiveRequest;
+        selectedTab = "archive";
+        renderHubTabs();
+        panel("ArchiveScoreboard").RemoveAndDeleteChildren();
+        show("ArchiveReplay", false);
+        setText("ArchiveTitle", (checked(entry.won) ? "Победа" : "Поражение") + " · " + duration(entry.duration_seconds));
+        setText("ArchiveStatus", "Загружаем статистику…");
+        send("offline_league_match_details", {id: entry.id, request: request});
+        $.Schedule(12, function () {
+            if (root.IsValid() && selectedTab === "archive" && archiveRequest === request && !archiveResult) {
+                setText("ArchiveStatus", "Ответ не получен. Открой матч заново.");
+            }
+        });
+    }
+
+    function receiveArchive(data) {
+        if (!root.IsValid() || selectedTab !== "archive" || integer(data.request) !== archiveRequest) {
+            return;
+        }
+        archiveResult = data.result;
+        if (!archiveResult) {
+            setText("ArchiveStatus", data.message || "Не удалось загрузить статистику.");
+            return;
+        }
+        setText("ArchiveStatus", roleName(archiveResult.role) + " · " + sign(archiveResult.rating_delta) +
+            " MMR  ·  " + (archiveResult.replay ? "Повтор сохранён" : "Повтор недоступен"));
+        show("ArchiveReplay", Boolean(archiveResult.replay));
+        renderScoreboard("ArchiveScoreboard", archiveResult);
+    }
+
+    function renderCoaches() {
+        ["Radiant", "Dire"].forEach(function (team) {
+            var info = coaches && coaches[team.toLowerCase()];
+            var description = !coaches ? "проверяем связь" : "нет связи";
+            if (info) {
+                description = info.mode === "rules" ? "локальные правила" :
+                    (checked(info.model_ready) ? "тренер готов" : "сервер готов");
+            }
+            setText("Coach" + team, team + " · " + description);
+            panel("Coach" + team).SetHasClass("CoachOnline", Boolean(info));
+        });
+    }
+
+    function requestHistory(offset) {
+        if (historyRequest !== null) {
+            return;
+        }
+        historyRequest = offset;
+        setText("HistoryFeedback", "Загружаем…");
+        renderSetup();
+        send("offline_league_history", {offset: offset});
+        $.Schedule(12, function () {
+            if (root.IsValid() && historyRequest === offset) {
+                historyRequest = null;
+                setText("HistoryFeedback", "Ответ не получен. Попробуй снова.");
+                renderSetup();
+            }
+        });
     }
 
     function groupedNumber(value) {
@@ -322,9 +440,10 @@
     function renderHubTabs() {
         ["history", "social", "settings"].forEach(function (tab) {
             var prefix = tab.charAt(0).toUpperCase() + tab.substring(1);
-            panel(prefix + "Tab").SetHasClass("HubTabSelected", selectedTab === tab);
+            panel(prefix + "Tab").SetHasClass("HubTabSelected", selectedTab === tab || (tab === "history" && selectedTab === "archive"));
             show(prefix + "Pane", selectedTab === tab);
         });
+        show("ArchivePane", selectedTab === "archive");
     }
 
     function normalizedTuning(value) {
@@ -471,11 +590,11 @@
         var canResume = Boolean(match && match.id && (canQueue || status === "error"));
         var activeRole = canResume ? integer(match.role) : selectedRole;
         var queue = panel("QueueButton");
-        queue.enabled = canQueue && !tuningDirty() && !tuningSaving;
+        queue.enabled = (canQueue || canResume) && !queuePending && !tuningDirty() && !tuningSaving;
         setText("QueueButtonLabel", status === "queuing" ? "Подбираем команды…" :
             (status === "starting" ? "Матч найден" : (canResume ? "Продолжить подбор" : "Найти матч")));
         show("CancelButton", canResume);
-        show("RefreshButton", status === "error");
+        show("RefreshButton", status === "ready" || status === "error");
         for (var index = 0; index <= 5; index++) {
             var button = panel("Role" + index);
             button.enabled = canQueue && !canResume;
@@ -489,80 +608,59 @@
         panel("StatusDot").SetHasClass("StatusReady", canQueue);
         renderProfile(state.profile);
         renderHubTabs();
-        renderHistory(ordered(state.history), status);
-        renderSocial(state.social, status === "loading");
+        renderHistory(ordered(history.matches), status);
+        show("HistoryPrevious", integer(history.offset) > 0);
+        show("HistoryNext", checked(history.more));
+        panel("HistoryPrevious").enabled = historyRequest === null;
+        panel("HistoryNext").enabled = historyRequest === null;
+        renderSocial(social, status === "loading");
         renderRoster(match, Boolean(match && match.id && (canResume || status === "starting")));
+        renderCoaches();
     }
 
     function renderResult() {
-        var resultActive = isPostGame();
+        var inMatch = Game.GetState() === DOTA_GameState.DOTA_GAMERULES_STATE_GAME_IN_PROGRESS;
+        var resultActive = isPostGame() || (inMatch && state.status === "finished" && Boolean(savedResult));
         show("LeagueResultCanvas", resultActive);
-        if (resultVisibility !== resultActive) {
-            resultVisibility = resultActive;
-            $.Msg("[offline-league-ui] result visible=", resultActive, " phase=", Game.GetState(),
-                " host=", root.id, " canvas=", Boolean(panel("LeagueResultCanvas")));
-        }
         if (!resultActive) {
             return;
         }
-        var result = state.result;
-        var success = Boolean(result && result.id && integer(result.winner) > 0);
-        var won = success && checked(result.won);
+        var result = savedResult || previewResult;
+        var hasResult = Boolean(result && result.id && integer(result.winner) > 0);
+        var success = Boolean(savedResult && hasResult);
+        var won = hasResult && checked(result.won);
         var shell = panel("ResultShell");
         shell.SetHasClass("ResultWon", won);
-        shell.SetHasClass("ResultLost", success && !won);
-        show("ResultDetails", success);
+        shell.SetHasClass("ResultLost", hasResult && !won);
+        show("ResultDetails", hasResult);
         var retry = state.status === "error" && checked(state.retry_save);
         show("RetrySaveButton", retry);
         panel("RetrySaveButton").enabled = retry;
-        show("RematchButton", success || (state.status === "error" && !retry) || state.status === "finished");
-        panel("RematchButton").enabled = !returningToLeague && state.status !== "loading" && state.status !== "saving";
+        show("RematchButton", inMatch && success);
+        panel("RematchButton").enabled = !returningToLeague;
         setText("RematchButtonLabel", returningToLeague ? "Возвращаемся…" : "Вернуться в лигу");
         setText("ResultReturnStatus", returnFeedback);
-        if (!success) {
+        var saveMessage = saveWaitExpired ? "Подтверждение сохранения можно проверить в истории лиги." : statusMessages.saving;
+        if (!hasResult) {
             setText("ResultTitle", "Матч завершён");
             var message = state.status === "error" || state.status === "saving" ? state.message : "";
-            setText("ResultSubtitle", message || statusMessages.saving);
+            setText("ResultSubtitle", message || saveMessage);
             return;
         }
 
         setText("ResultTitle", won ? "Победа" : "Поражение");
-        var winner = integer(result.winner) === 2 ? "Силы Света" : "Силы Тьмы";
-        var medal = state.profile && checked(state.profile.calibrated) ? state.profile.medal : "Калибровка";
-        var radiantScore = integer(result.radiant_score);
-        var direScore = integer(result.dire_score);
-        var summary = radiantScore === null || direScore === null ? winner + " победили" :
-            "Силы Света " + radiantScore + " : " + direScore + " Силы Тьмы";
-        setText("ResultSubtitle", summary + (medal ? " · " + medal : ""));
-        setText("ResultHero", heroName(result.hero));
-        setText("ResultRole", roleName(result.role));
-        setText("ResultKDA", recordKda(result));
-        setText("ResultTime", duration(result.duration_seconds));
-        setText("ResultDelta", sign(result.rating_delta));
-        var delta = integer(result.rating_delta);
-        panel("ResultDelta").SetHasClass("Gain", delta > 0);
-        panel("ResultDelta").SetHasClass("Loss", delta < 0);
-        setText("ResultRating", displayNumber(result.rating_before) + " → " + displayNumber(result.rating_after) + " MMR");
-        if (resultHero !== result.hero) {
-            resultHero = result.hero;
-            var image = panel("ResultHeroImage");
-            image.RemoveAndDeleteChildren();
-            addHero(image, "ResultHeroIcon", resultHero);
-        }
-        if (state.status === "finished" && automaticReturnResult !== result.id) {
-            automaticReturnResult = result.id;
-            returnFeedback = "Возврат в лигу через 5 секунд.";
-            setText("ResultReturnStatus", returnFeedback);
-            $.Schedule(5.0, function () {
-                if (root.IsValid() && state.status === "finished" && state.result && state.result.id === result.id && !returningToLeague) {
-                    returnToLeague();
-                }
-            });
+        setText("ResultSubtitle", (success ? "Матч сохранён" : state.status === "error" && state.message || saveMessage) +
+            " · " + duration(result.duration_seconds) + " · " + roleName(result.role));
+        setText("ResultRating", success ? displayNumber(result.rating_before) + " → " + displayNumber(result.rating_after) +
+            " MMR  (" + sign(result.rating_delta) + ")" : "");
+        if (renderedResult !== result) {
+            renderedResult = result;
+            renderScoreboard("ResultScoreboard", result);
         }
     }
 
     function returnToLeague() {
-        if (returningToLeague || (state.status !== "finished" && !(state.status === "error" && !checked(state.retry_save)))) {
+        if (returningToLeague || (!savedResult && !saveWaitExpired && !(state.status === "error" && !checked(state.retry_save)))) {
             return;
         }
         returningToLeague = true;
@@ -573,7 +671,7 @@
         $.Schedule(8.0, function () {
             if (root.IsValid() && returningToLeague && requestNumber === returnRequestNumber) {
                 returningToLeague = false;
-                returnFeedback = "Меню пока не открылось. Нажми «Вернуться в лигу» для повтора.";
+                returnFeedback = "Если меню не открылось, выполни offline_league в игровой консоли.";
                 renderResult();
             }
         });
@@ -583,7 +681,7 @@
         if (!root.IsValid()) {
             return;
         }
-        if (isPostGame()) {
+        if (isPostGame() && !savedResult && !saveWaitExpired) {
             send("offline_league_poll");
         }
         renderResult();
@@ -591,7 +689,9 @@
     }
 
     function send(event, value) {
-        GameEvents.SendCustomGameEventToServer(event, value || {});
+        var payload = value || {};
+        payload.PlayerID = Game.GetLocalPlayerID();
+        GameEvents.SendCustomGameEventToServer(event, payload);
     }
 
     function activate(id, callback) {
@@ -606,14 +706,52 @@
         }
         var render = isSetup ? renderSetup : renderResult;
         var readyToRender = function (table, key, payload) {
-            if (key === "state" && root.IsValid()) {
-                state = payload || {};
-                render();
+            if (!root.IsValid()) {
+                return;
             }
+            if (key === "state") {
+                state = payload || {};
+                queuePending = false;
+            } else if (key === "history") {
+                history = payload || {};
+            } else if (key === "social") {
+                social = payload;
+            } else if (key === "coaches") {
+                coaches = payload;
+            } else if (key === "result") {
+                savedResult = payload;
+            } else if (key === "result_preview") {
+                previewResult = payload;
+            }
+            render();
         };
         CustomNetTables.SubscribeNetTableListener("offline_league", readyToRender);
         state = CustomNetTables.GetTableValue("offline_league", "state") || {};
+        history = CustomNetTables.GetTableValue("offline_league", "history") || {};
+        social = CustomNetTables.GetTableValue("offline_league", "social");
+        coaches = CustomNetTables.GetTableValue("offline_league", "coaches");
+        savedResult = CustomNetTables.GetTableValue("offline_league", "result");
+        previewResult = CustomNetTables.GetTableValue("offline_league", "result_preview");
         if (isSetup) {
+            GameEvents.Subscribe("offline_league_archive", receiveArchive);
+            GameEvents.Subscribe("offline_league_history_loaded", function (data) {
+                if (root.IsValid() && integer(data.offset) === historyRequest) {
+                    historyRequest = null;
+                    setText("HistoryFeedback", data.message || "");
+                    renderSetup();
+                }
+            });
+            activate("HistoryPrevious", function () { requestHistory(Math.max(0, integer(history.offset) - 12)); });
+            activate("HistoryNext", function () { requestHistory((integer(history.offset) || 0) + 12); });
+            activate("ArchiveBack", function () {
+                selectedTab = "history";
+                renderHubTabs();
+            });
+            activate("ArchiveReplay", function () {
+                if (archiveResult && archiveResult.replay) {
+                    send("offline_league_watch_replay", {id: archiveResult.id});
+                }
+            });
             activate("HistoryTab", function () {
                 selectedTab = "history";
                 renderHubTabs();
@@ -681,10 +819,17 @@
                 });
             });
             activate("QueueButton", function () {
-                if (state.status === "ready" && !tuningDirty() && !tuningSaving) {
-                    panel("QueueButton").enabled = false;
+                if (panel("QueueButton").enabled) {
+                    queuePending = true;
+                    renderSetup();
                     var activeRole = state.match && integer(state.match.role);
                     send("offline_league_queue", {role: activeRole || selectedRole});
+                    $.Schedule(12, function () {
+                        if (root.IsValid() && queuePending) {
+                            queuePending = false;
+                            renderSetup();
+                        }
+                    });
                 }
             });
             activate("CancelButton", function () {
@@ -702,6 +847,12 @@
                 returnToLeague();
             });
             $.Schedule(0.0, pollPostgame);
+            $.Schedule(8.0, function () {
+                if (root.IsValid() && isPostGame() && !savedResult) {
+                    saveWaitExpired = true;
+                    renderResult();
+                }
+            });
         }
         render();
     }

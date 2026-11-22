@@ -7,10 +7,12 @@ const vm = require("node:vm");
 
 const source = fs.readFileSync(path.join(__dirname, "addon/panorama/scripts/custom_game/offline_league.js"), "utf8");
 const layout = fs.readFileSync(path.join(__dirname, "addon/panorama/layout/custom_game/offline_league_result.xml"), "utf8");
+const manifest = fs.readFileSync(path.join(__dirname, "addon/panorama/layout/custom_game/custom_ui_manifest.xml"), "utf8");
 
 function mount(phase, initialState, missingPhase = false) {
     const scheduled = [];
     const panels = new Map();
+    const sent = [];
     let listener;
     let gamePhase = phase;
     const stack = [];
@@ -23,11 +25,13 @@ function mount(phase, initialState, missingPhase = false) {
         const attributes = Object.fromEntries([...tag[3].matchAll(/([\w]+)="([^"]*)"/g)].map(item => [item[1], item[2]]));
         const node = {id: attributes.id || "", children: [], style: {}, classes: new Set((attributes.class || "").split(" ")), enabled: true,
                 SetHasClass(name, value) { value ? this.classes.add(name) : this.classes.delete(name); },
-                SetPanelEvent() {}, IsValid() { return true; },
+                SetPanelEvent(name, callback) { this[name] = callback; },
+                RemoveAndDeleteChildren() { this.children = []; },
+                IsValid() { return true; },
                 FindChildTraverse(id) {
                     for (const child of this.children) {
                         if (child.id === id) return child;
-                        const found = child.FindChildTraverse(id);
+                        const found = child.FindChildTraverse?.(id);
                         if (found) return found;
                     }
                     return null;
@@ -50,22 +54,35 @@ function mount(phase, initialState, missingPhase = false) {
     }
     engineShowsHud();
     const context = {
-        $: {GetContextPanel: () => root, Msg() {}, Schedule: (_, callback) => scheduled.push(callback)},
-        Game: {GetState: () => gamePhase},
-        DOTA_GameState: missingPhase ? {} : {DOTA_GAMERULES_STATE_POST_GAME: 8},
+        $: {
+            GetContextPanel: () => root,
+            Localize: (token) => token,
+            Schedule: (_, callback) => scheduled.push(callback),
+            CreatePanel(_, parent) {
+                const child = {
+                    children: [],
+                    AddClass() {},
+                    SetHasClass() {},
+                };
+                parent.children.push(child);
+                return child;
+            },
+        },
+        Game: {GetState: () => gamePhase, GetLocalPlayerID: () => 0},
+        DOTA_GameState: missingPhase ? {} : {DOTA_GAMERULES_STATE_GAME_IN_PROGRESS: 7, DOTA_GAMERULES_STATE_POST_GAME: 8},
         CustomNetTables: {
             SubscribeNetTableListener: (_, callback) => { listener = callback; },
-            GetTableValue: () => initialState,
+            GetTableValue: (_, key) => key === "state" ? initialState : null,
         },
-        GameEvents: {SendCustomGameEventToServer() {}},
+        GameEvents: {SendCustomGameEventToServer(event) { sent.push(event); }},
     };
     vm.runInNewContext(source, context, {filename: "offline_league.js"});
     scheduled.shift()();
     engineShowsHud();
-    return {root: canvas, update(nextPhase, state) {
+    return {root: canvas, panels, sent, tick: () => scheduled.shift()(), update(nextPhase, state, key = "state") {
         engineShowsHud();
         gamePhase = nextPhase;
-        listener("offline_league", "state", state);
+        listener("offline_league", key, state);
         engineShowsHud();
     }};
 }
@@ -89,4 +106,19 @@ assert.equal(root.hittest, false);
 assert.equal(mount(undefined, {}, true).root.style.visibility, "collapse", "Missing phase constants must fail closed");
 
 assert.match(layout, /id="LeagueResultCanvas"[^>]*style="visibility: collapse;"[^>]*hittest="false"[^>]*hittestchildren="false"/);
-console.log("Result overlay: actual layout, engine-owned HUD mount, active match, stale result and postgame checks passed.");
+assert.match(manifest, /type="EndScreen"[^>]*offline_league_result\.xml/);
+
+const finished = mount(7, {status: "saving"});
+finished.update(7, {
+    id: "match", winner: 2, won: true, duration_seconds: 185,
+    participants: [{team: 2, hero: "npc_dota_hero_sniper", kills: 0}, {team: 3, deaths: 0}],
+}, "result");
+finished.update(7, {status: "finished"});
+assert.match(finished.panels.get("ResultSubtitle").text, /Матч сохранён · 3:05/);
+assert.equal(finished.panels.get("RematchButton").style.visibility, "visible");
+assert.equal(finished.panels.get("ResultScoreboard").children.length, 2);
+for (let tick = 0; tick < 12; tick++) finished.tick();
+assert.deepEqual(finished.sent, [], "A saved result remains open until the player acts");
+finished.panels.get("RematchButton").onactivate();
+assert.deepEqual(finished.sent, ["offline_league_rematch"]);
+console.log("Postgame mounting, saved scoreboard and manual return checks passed.");

@@ -4,13 +4,15 @@ local socialPlay = require("league_social_play")
 local ENDPOINT = "http://127.0.0.1:32157"
 local RADIANT = DOTA_TEAM_GOODGUYS
 local DIRE = DOTA_TEAM_BADGUYS
-local HISTORY_LIMIT = 12
 local IPC_ARGUMENT = "-offline_league_file_ipc"
 local OPEN_LEAGUE_COMMAND = "dota_launch_custom_game offline_league dota"
 local IPC_POLL_INTERVAL = 0.2
 local IPC_REQUEST_TIMEOUT = 10
 local DEFAULT_BOT_DIFFICULTY = 4
 local LEAGUE = {}
+local ANCIENT_GUARD = "modifier_offline_league_ancient"
+
+LinkLuaModifier(ANCIENT_GUARD, "league_ancient", LUA_MODIFIER_MOTION_NONE)
 
 local function realTime()
     if type(GetSystemTimeMS) == "function" then return GetSystemTimeMS() / 1000 end
@@ -45,6 +47,10 @@ end
 
 local function integerStat(value)
     return type(value) == "number" and math.max(0, math.floor(value)) or nil
+end
+
+local function validMatchId(value)
+    return type(value) == "string" and #value == 32 and value:match("^[0-9a-f]+$")
 end
 
 local function ipcNonce()
@@ -89,18 +95,11 @@ end
 function LEAGUE:publish(status, message)
     self.status = status
     self.message = message or ""
-    local history = {}
-    for index = 1, math.min(HISTORY_LIMIT, #(self.history or {})) do
-        history[index] = self.history[index]
-    end
     CustomNetTables:SetTableValue("offline_league", "state", {
         status = self.status,
         message = self.message,
         profile = self.profile,
-        social = self.social,
-        history = history,
         match = self.match,
-        result = self.result,
         retry_save = self.finishData ~= nil,
         tuning = self.tuning,
     })
@@ -159,8 +158,8 @@ function LEAGUE:poll()
     if self.finishData and not self.requestPending
         and (not self.saveAttempts or self.retrySaveAt and now >= self.retrySaveAt) then
         self:saveResult()
-    elseif self.played and self.match and self.winner and not self.finishData and not self.result then
-        self:beginResult(self.winner)
+    elseif self.played and self.match and GameRules:State_Get() == DOTA_GAMERULES_STATE_POST_GAME then
+        self:finishPostGame()
     end
 end
 
@@ -177,7 +176,16 @@ function LEAGUE:requestFile(path, query, callback)
     self.fileRequests[id] = {
         path = path, replyPath = "scripts/league_ipc/" .. id .. ".txt", callback = callback, startedAt = realTime(),
     }
-    print("[offline-league-ipc] " .. id .. " " .. operation .. " " .. (query ~= "" and query or "-"))
+    if #query > 760 then
+        local payload = operation .. ":" .. query
+        local total = math.ceil(#payload / 760)
+        for index = 1, total do
+            print(("[offline-league-ipc] %s part %d/%d %s"):format(
+                id, index, total, payload:sub((index - 1) * 760 + 1, index * 760)))
+        end
+    else
+        print("[offline-league-ipc] " .. id .. " " .. operation .. " " .. (query ~= "" and query or "-"))
+    end
     self.mode:SetContextThink("league_ipc_" .. id, function()
         return self:pollFile(id)
     end, 0.25)
@@ -222,9 +230,71 @@ end
 
 function LEAGUE:acceptState(data)
     self.profile = data.profile or self.profile
-    self.social = data.social or self.social
-    self.history = data.history or self.history
     self.tuning = data.tuning or self.tuning
+    if data.social then
+        CustomNetTables:SetTableValue("offline_league", "social", data.social)
+    end
+    if data.history then
+        CustomNetTables:SetTableValue("offline_league", "history", {
+            matches = data.history, offset = data.history_offset, more = data.history_more,
+        })
+    end
+end
+
+function LEAGUE:loadArchive(playerID, identity, requestNumber)
+    if not validMatchId(identity) or not requestNumber
+        or GameRules:State_Get() ~= DOTA_GAMERULES_STATE_CUSTOM_GAME_SETUP then
+        return
+    end
+    self:request("/match", { id = identity }, function(data, message)
+        local result = data and data.result
+        if result and result.id == identity then
+            self.archive = result
+        end
+        local player = PlayerResource:GetPlayer(playerID)
+        if player then
+            CustomGameEventManager:Send_ServerToPlayer(player, "offline_league_archive", {
+                request = requestNumber, id = identity, result = result, message = message,
+            })
+        end
+    end)
+end
+
+function LEAGUE:loadHistory(playerID, offset)
+    if not offset or offset < 0 or offset > 1000000 or offset % 1 ~= 0
+        or GameRules:State_Get() ~= DOTA_GAMERULES_STATE_CUSTOM_GAME_SETUP then
+        return
+    end
+    self:request("/history", { offset = offset }, function(data, message)
+        self:acceptState(data or {})
+        local player = PlayerResource:GetPlayer(playerID)
+        if player then
+            CustomGameEventManager:Send_ServerToPlayer(player, "offline_league_history_loaded", {
+                offset = offset, message = message,
+            })
+        end
+    end)
+end
+
+function LEAGUE:refreshCoaches()
+    if self.coachesPending or GameRules:State_Get() ~= DOTA_GAMERULES_STATE_CUSTOM_GAME_SETUP then
+        return
+    end
+    self.coachesPending = true
+    self:request("/coaches", nil, function(data)
+        self.coachesPending = false
+        CustomNetTables:SetTableValue("offline_league", "coaches", data or {})
+    end)
+end
+
+function LEAGUE:watchReplay(identity)
+    local setup = GameRules:State_Get() == DOTA_GAMERULES_STATE_CUSTOM_GAME_SETUP and not self.started
+    local result = setup and self.archive
+    if not result or result.id ~= identity or not validMatchId(identity) then return end
+    local name = "offline_league_" .. identity
+    if result.replay == name or result.replay == "replays/" .. name then
+        SendToServerConsole("playdemo " .. result.replay)
+    end
 end
 
 function LEAGUE:saveSettings(data)
@@ -265,6 +335,7 @@ function LEAGUE:refresh()
         self:publish(self.status, self.message)
         return
     end
+    self:refreshCoaches()
     self.requestPending = true
     self:publish("loading", "Загрузка профиля…")
     self:request("/state", nil, function(data, message)
@@ -280,6 +351,9 @@ function LEAGUE:refresh()
 end
 
 function LEAGUE:allowOrder(order)
+    if self.pendingAncient then
+        return false
+    end
     if self.playerID == nil or order.issuer_player_id_const ~= self.playerID then
         return true
     end
@@ -452,7 +526,8 @@ function LEAGUE:populateBots()
 end
 
 function LEAGUE:prepareBotPicks()
-    if self.botsAdded or self.requestPending or GameRules:State_Get() ~= DOTA_GAMERULES_STATE_STRATEGY_TIME then
+    if self.botsAdded or self.requestPending or self.leavePending or not self.match
+        or GameRules:State_Get() ~= DOTA_GAMERULES_STATE_STRATEGY_TIME then
         return
     end
     local selected = safeHero(optional(PlayerResource, "GetSelectedHeroName", self.playerID))
@@ -495,7 +570,18 @@ function LEAGUE:playerStats(playerID)
         xpm = integerStat(optional(player, "GetXPPerMin", playerID)),
         lastHits = integerStat(optional(player, "GetLastHits", playerID)),
         denies = integerStat(optional(player, "GetDenies", playerID)),
+        level = integerStat(optional(player, "GetLevel", playerID)),
+        netWorth = integerStat(optional(player, "GetNetWorth", playerID)),
+        damage = integerStat(optional(player, "GetRawPlayerDamage", playerID)),
+        healing = integerStat(optional(player, "GetHealing", playerID)),
     }
+end
+
+function LEAGUE:stopReplay()
+    if self.recording then
+        self.recording = false
+        SendToServerConsole("tv_stoprecord")
+    end
 end
 
 function LEAGUE:beginResult(winner)
@@ -505,6 +591,7 @@ function LEAGUE:beginResult(winner)
     end
     local player = self:playerStats(self.playerID)
     local rows = {}
+    local participants = {}
     local mapped = self:roster()
     local score = { [RADIANT] = 0, [DIRE] = 0 }
     local counts = { [RADIANT] = 0, [DIRE] = 0 }
@@ -518,7 +605,15 @@ function LEAGUE:beginResult(winner)
                 slot, stats.hero or "", stats.kills or "", stats.deaths or "",
                 stats.assists or "", stats.gpm or "", stats.xpm or "",
                 stats.lastHits or "", stats.denies or "",
+                stats.level or "", stats.netWorth or "", stats.damage or "", stats.healing or "",
             }, ",")
+            participants[#participants + 1] = {
+                name = participant.name, team = participant.team, is_player = participant.is_player,
+                hero = stats.hero, level = stats.level, kills = stats.kills, deaths = stats.deaths,
+                assists = stats.assists, gpm = stats.gpm, xpm = stats.xpm,
+                last_hits = stats.lastHits, denies = stats.denies, net_worth = stats.netWorth,
+                hero_damage = stats.damage, healing = stats.healing,
+            }
             if stats.kills ~= nil then
                 score[team] = score[team] + stats.kills
                 counts[team] = counts[team] + 1
@@ -539,6 +634,11 @@ function LEAGUE:beginResult(winner)
         dire_score = integerStat(optional(PlayerResource, "GetTeamKills", DIRE))
             or (counts[DIRE] == 5 and score[DIRE] or nil),
     }
+    CustomNetTables:SetTableValue("offline_league", "result_preview", {
+        id = self.match.id, won = winner == RADIANT, winner = winner, role = self.match.role,
+        duration_seconds = self.finishData.duration, participants = participants,
+        radiant_score = self.finishData.radiant_score, dire_score = self.finishData.dire_score,
+    })
     self:saveResult()
 end
 
@@ -566,9 +666,65 @@ function LEAGUE:saveResult()
         self.result = data.result
         self.finishData = nil
         self.match = nil
+        CustomNetTables:SetTableValue("offline_league", "result", self.result)
         self:publish("finished")
         print("[offline-league] Match saved " .. tostring(self.result.id))
+        if self.pendingAncient then
+            self:stopReplay()
+        end
     end)
+end
+
+function LEAGUE:guardAncients()
+    for _, team in ipairs({ "goodguys", "badguys" }) do
+        local name = "dota_" .. team .. "_fort"
+        local ancient = Entities:FindByName(nil, name) or Entities:FindByName(nil, "npc_" .. name)
+        if ancient then
+            ancient:AddNewModifier(ancient, nil, ANCIENT_GUARD, {})
+        end
+    end
+end
+
+function LEAGUE:confirmAncientDeath(ancient, attacker)
+    if not self.played or self.leavePending or self.winner then return end
+    self.winner = ancient:GetTeamNumber() == RADIANT and DIRE or RADIANT
+    self.pendingAncient = { unit = ancient, attacker = attacker }
+    self.mode:SetBotThinkingEnabled(false)
+    self:beginResult(self.winner)
+    -- Dota can stop processing Lua callbacks as soon as the Ancient dies.
+    -- Give the local service time to save while the game is still running.
+    self.mode:SetContextThink("league_complete_ancient", function()
+        if not self.result then
+            self:destroyAncient()
+        end
+    end, 5)
+end
+
+function LEAGUE:destroyAncient()
+    local pending = self.pendingAncient
+    if not pending then return end
+    self.pendingAncient = nil
+    if IsValidEntity(pending.unit) and pending.unit:IsAlive() then
+        pending.unit:RemoveModifierByName(ANCIENT_GUARD)
+        local attacker = pending.attacker and IsValidEntity(pending.attacker) and pending.attacker or pending.unit
+        pending.unit:Kill(nil, attacker)
+    end
+    if GameRules:State_Get() == DOTA_GAMERULES_STATE_GAME_IN_PROGRESS then
+        GameRules:SetGameWinner(self.winner)
+    end
+    self:stopReplay()
+end
+
+function LEAGUE:finishPostGame()
+    if self.finishData or self.result or self.leavePending then return end
+    local winner = self.winner or optional(GameRules, "GetGameWinner")
+    if winner == RADIANT or winner == DIRE then
+        self:beginResult(winner)
+    elseif not self.winnerWaitAt then
+        self.winnerWaitAt = realTime()
+    elseif self.status ~= "error" and realTime() - self.winnerWaitAt > 4 then
+        self:publish("error", "Игра не передала победителя матча.")
+    end
 end
 
 function LEAGUE:stateChanged()
@@ -587,18 +743,18 @@ function LEAGUE:stateChanged()
     elseif state == DOTA_GAMERULES_STATE_GAME_IN_PROGRESS and self.started then
         self.played = true
         if not self.leavePending then
+            self:guardAncients()
+            if validMatchId(self.match.id) then
+                self.recording = true
+                SendToServerConsole("tv_record offline_league_" .. self.match.id)
+            end
             self:publish("playing")
             socialPlay.start(self)
         end
         print("[offline-league] Match in progress")
     elseif state == DOTA_GAMERULES_STATE_POST_GAME and self.played then
-        self.mode:SetContextThink("league_finish", function()
-            if self.winner then
-                self:beginResult(self.winner)
-            elseif not self.result and not self.finishData then
-                self:publish("error", "Игра не передала победителя матча.")
-            end
-        end, 1)
+        self:stopReplay()
+        self:finishPostGame()
     end
 end
 
@@ -615,6 +771,7 @@ function LEAGUE:onAncientKilled(event)
     else
         return
     end
+    self:stopReplay()
     self:beginResult(self.winner)
     local winner = self.winner
     self.mode:SetContextThink("league_ancient_victory", function()
@@ -661,6 +818,7 @@ function LEAGUE:leave()
         end
 
         self.match = nil
+        self:stopReplay()
         self:restoreBotSettings()
         print("[offline-league] Left unfinished match " .. identity)
         SendToServerConsole(OPEN_LEAGUE_COMMAND)
@@ -672,6 +830,7 @@ function LEAGUE:rematch()
         return
     end
     SendToServerConsole(OPEN_LEAGUE_COMMAND)
+    self:destroyAncient()
 end
 
 function LEAGUE:listen(name, callback)
@@ -707,12 +866,19 @@ function Activate()
         end
     end, nil)
     league:listen("offline_league_refresh", function() league:refresh() end)
-    league:listen("offline_league_poll", function() league:poll() end)
+    CustomGameEventManager:RegisterListener("offline_league_poll", function() league:poll() end)
     league:listen("offline_league_settings", function(_, data) league:saveSettings(data) end)
     league:listen("offline_league_queue", function(sender, data) league:queue(sender, tonumber(data.role) or 0) end)
     league:listen("offline_league_cancel", function() league:cancel() end)
     league:listen("offline_league_leave", function() league:leave() end)
     league:listen("offline_league_rematch", function() league:rematch() end)
+    league:listen("offline_league_match_details", function(sender, data)
+        league:loadArchive(sender, data.id, tonumber(data.request))
+    end)
+    league:listen("offline_league_history", function(sender, data)
+        league:loadHistory(sender, tonumber(data.offset))
+    end)
+    league:listen("offline_league_watch_replay", function(_, data) league:watchReplay(data.id) end)
     league:publish("loading", "Загрузка профиля…")
     print("[offline-league] Addon activated")
 end

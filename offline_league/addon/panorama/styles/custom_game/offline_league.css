@@ -216,7 +216,7 @@
 .HistoryHeader Label { font-size: 15px; color: #B3BEBA; vertical-align: center; }
 .HistoryList { width: 100%; height: fill-parent-flow(1.0); flow-children: down; overflow: squish scroll; }
 .HistoryRow { width: 100%; height: 60px; flow-children: right; padding: 0px 10px; border-bottom: 1px solid #3D4647; }
-.HistoryRow:hover { background-color: #293431; }
+.HistoryRow:hover, .HistoryRow:focus { background-color: #35423B; }
 .HistoryRow Label { font-size: 16px; vertical-align: center; text-overflow: ellipsis; }
 
 .ColResult { width: 18%; }
@@ -228,14 +228,17 @@
 .RowResult { flow-children: down; vertical-align: center; }
 .RowResult .RowOutcome { font-weight: bold; }
 .HistoryRow .RowDate { font-size: 13px; color: #9AA7A1; }
-.RowIdentity { flow-children: right; }
+.RowIdentity { flow-children: right; vertical-align: center; }
 .RowHeroIcon { width: 29px; height: 29px; vertical-align: center; margin-right: 8px; }
-.RowHeroName { width: fill-parent-flow(1.0); }
+.RowHeroName { width: fill-parent-flow(1.0); margin-right: 8px; }
 .Quiet { color: #B0B9B4; }
 .Gain { color: #9DCBAD; }
 .Loss { color: #E1A194; }
 
 .HistoryEmpty { horizontal-align: center; vertical-align: center; flow-children: down; }
+.HistoryFooter { width: 100%; flow-children: right; vertical-align: bottom; }
+.HistoryFooter Button { margin-left: 8px; }
+.HistoryFeedback { width: fill-parent-flow(1.0); vertical-align: center; color: #B5C0B9; }
 .EmptyTitle { color: #D2CAC0; font-size: 22px; horizontal-align: center; }
 .EmptyNote { color: #A7B0AC; font-size: 16px; margin-top: 7px; horizontal-align: center; text-align: center; }
 
@@ -261,46 +264,43 @@
 .StatusDot.StatusError { background-color: #DC998A; }
 .StatusText { color: #B5C0B9; font-size: 16px; vertical-align: center; width: fill-parent-flow(1.0); }
 .StatusText.StatusError { color: #E0A99A; }
+.CoachStatus { margin-left: 16px; vertical-align: center; font-size: 15px; color: #D6A49E; }
+.CoachStatus.CoachOnline { color: #A2CDB0; }
 
 .LeagueResultHost { width: 100%; height: 100%; }
 .ResultCanvas { background-color: gradient(linear, 0% 0%, 100% 100%, from(#1D2928), to(#0B1015)); z-index: 100; }
 
 .ResultShell {
-    width: 820px;
-    max-width: 90%;
-    padding: 40px 52px;
+    width: 1130px;
+    max-width: 94%;
+    max-height: 94%;
+    padding: 22px 32px;
     horizontal-align: center;
     vertical-align: center;
     border-top: 2px solid #B28655;
 }
-.ResultEyebrow { color: #CCAB7E; font-size: 17px; horizontal-align: center; }
-.ResultTitle { color: #EEE6D9; font-size: 62px; font-weight: bold; horizontal-align: center; margin-top: 3px; }
+.ResultTitle { color: #EEE6D9; font-size: 46px; font-weight: bold; horizontal-align: center; }
 .ResultShell.ResultWon .ResultTitle { color: #A2CDB0; }
 .ResultShell.ResultLost .ResultTitle { color: #D79D97; }
 .ResultSubtitle { color: #B6C1BB; font-size: 19px; horizontal-align: center; text-align: center; max-width: 100%; margin-top: 4px; }
 .ResultDetails { width: 100%; flow-children: down; }
-.ResultHeroCard {
-    width: 100%;
-    margin-top: 30px;
-    padding: 16px 17px;
-    flow-children: right;
-    background-color: #1A2223;
-    border: 1px solid #3D4A46;
-}
-.ResultHeroImage { width: 72px; height: 72px; vertical-align: center; border: 1px solid #66716A; }
-.ResultHeroIcon { width: 100%; height: 100%; }
-.ResultHeroLabels { flow-children: down; vertical-align: center; margin-left: 16px; }
-.ResultHeroName { font-size: 26px; color: #EFEEE3; }
-.ResultRole { color: #AFBCB5; }
-.ResultMetrics { width: 100%; flow-children: right; margin-top: 16px; }
-.ResultMetric { width: fill-parent-flow(1.0); flow-children: down; background-color: #192122; border: 1px solid #3B4846; margin-left: 9px; padding: 12px 14px; }
-.ResultMetricStart { margin-left: 0px; }
-.ResultSmall { color: #B1BCB6; font-size: 16px; }
-.ResultMetricValue { color: #F3E8DB; font-size: 30px; font-weight: bold; margin-top: 4px; }
-.ResultMetricValue.Gain { color: #9DCBAD; }
-.ResultMetricValue.Loss { color: #E1A194; }
-.ResultRating { color: #D5BD98; font-size: 18px; horizontal-align: center; margin-top: 21px; }
-.ResultButton { width: 100%; margin-top: 24px; }
-.ResultReturnStatus { width: 100%; min-height: 23px; color: #B6C1BB; font-size: 17px; text-align: center; margin-top: 13px; }
+.ResultRating { color: #D5BD98; font-size: 18px; horizontal-align: center; margin: 6px 0px 13px; }
+.ResultButton { horizontal-align: center; width: 330px; margin-top: 16px; }
+.ResultReturnStatus { width: 100%; color: #B6C1BB; font-size: 16px; text-align: center; margin-top: 8px; }
+
+.ArchiveActions { width: 100%; flow-children: right; margin-top: 14px; }
+.ArchiveTitle { width: fill-parent-flow(1.0); margin: 0px 10px; vertical-align: center; color: #EFEEE3; font-size: 21px; font-weight: bold; }
+.ArchiveStatus { width: 100%; color: #BAC6BF; font-size: 16px; margin: 8px 0px; }
+.Scoreboard, .ScoreSide { width: 100%; flow-children: down; }
+.ArchiveScoreboard { height: fill-parent-flow(1.0); overflow: squish scroll; }
+.ScoreSide { margin-bottom: 8px; }
+.ScoreHeader, .ScoreRow { width: 100%; height: 33px; flow-children: right; padding: 0px 8px; }
+.ScoreRow { background-color: #1B2527; border-bottom: 1px solid #3A4547; }
+.ScoreRow.ScorePlayer { background-color: #3B372C; }
+.ScoreIdentity { width: 34%; vertical-align: center; flow-children: right; }
+.ScoreHeroIcon { width: 25px; height: 25px; vertical-align: center; margin-right: 6px; }
+.ScoreName { width: fill-parent-flow(1.0); color: #E8E8E0; text-overflow: ellipsis; vertical-align: center; font-size: 15px; }
+.ScoreStat { width: fill-parent-flow(1.0); padding: 0px 3px; vertical-align: center; text-align: center; font-size: 15px; color: #E1E6E0; }
+.ScoreHeader Label { font-weight: bold; text-overflow: ellipsis; font-size: 14px; }
 
 .IsHidden { visibility: collapse; }
