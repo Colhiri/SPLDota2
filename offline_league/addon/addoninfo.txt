@@ -5,6 +5,7 @@
 	"MinimalPrecache" "0"
 	"EnablePickRules" "1"
 	"HeroGuidesSupported" "1"
+	"ForceDefaultGuide" "0"
 	"DrawCustomTeamHeroesOnMinimap" "1"
 	"dota"
 	{
