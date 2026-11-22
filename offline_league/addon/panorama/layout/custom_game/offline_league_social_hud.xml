@@ -1,0 +1,17 @@
+<root>
+    <styles>
+        <include src="file://{resources}/styles/custom_game/offline_league_social_hud.css" />
+    </styles>
+    <scripts>
+        <include src="file://{resources}/scripts/custom_game/offline_league_social_hud.js" />
+    </scripts>
+    <Panel class="LeagueSocialHud" hittest="false" hittestchildren="false">
+        <Panel class="LeagueSocialCard" hittest="false" hittestchildren="false">
+            <Panel class="LeagueSocialSpeaker">
+                <Label id="LeagueSocialName" class="LeagueSocialName" />
+                <Label id="LeagueSocialRelation" class="LeagueSocialRelation" />
+            </Panel>
+            <Label id="LeagueSocialMessage" class="LeagueSocialMessage" />
+        </Panel>
+    </Panel>
+</root>

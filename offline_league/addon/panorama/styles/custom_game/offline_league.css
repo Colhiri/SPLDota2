@@ -1,0 +1,306 @@
+.LeagueCanvas {
+    width: 100%;
+    height: 100%;
+    background-color: gradient(linear, 0% 0%, 100% 100%, from(#192323), color-stop(0.40, #101719), to(#090D11));
+    font-family: Radiance;
+    color: #EBE5D8;
+}
+
+.CanvasTopBevel {
+    width: 100%;
+    height: 5px;
+    background-color: gradient(linear, 0% 0%, 100% 0%, from(#232B2B), color-stop(0.45, #B78A53), to(#232B2B));
+}
+
+.LeagueShell {
+    width: 1320px;
+    max-width: 92%;
+    height: 850px;
+    max-height: 94%;
+    horizontal-align: center;
+    vertical-align: center;
+    flow-children: down;
+}
+
+.PageHeader {
+    width: 100%;
+    height: 108px;
+    flow-children: right;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #49514E;
+}
+
+.HeaderEmblem {
+    width: 62px;
+    height: 62px;
+    margin-right: 20px;
+    border: 1px solid #8F7451;
+    vertical-align: center;
+    background-color: gradient(linear, 0% 0%, 100% 100%, from(#373529), to(#1B2424));
+}
+
+.HeaderEmblemMark {
+    width: 21px;
+    height: 28px;
+    horizontal-align: center;
+    vertical-align: center;
+    border-left: 5px solid #D2A36A;
+    border-right: 5px solid #D2A36A;
+    transform: rotateZ(38deg);
+}
+
+.PageTitleBlock { flow-children: down; vertical-align: center; width: fill-parent-flow(1.0); }
+.PageTitle { font-size: 50px; font-weight: bold; color: #F4EBDD; }
+.PageSubtitle { color: #A8AFAC; font-size: 18px; margin-top: 2px; }
+
+.LeagueBody { width: 100%; height: fill-parent-flow(1.0); flow-children: right; }
+.Sidebar { width: 386px; height: 100%; flow-children: down; margin-right: 16px; }
+
+.Card {
+    background-color: gradient(linear, 0% 0%, 100% 100%, from(#252D2C), to(#1C2226));
+    border: 1px solid #444D4D;
+    border-top: 2px solid #65716B;
+    flow-children: down;
+}
+
+.ProfileCard { width: 100%; padding: 22px 25px; margin-bottom: 16px; }
+.MatchCard { width: 100%; padding: 20px 25px; }
+.HistoryCard { width: fill-parent-flow(1.0); height: 100%; padding: 22px 25px; }
+
+.SectionTitle { color: #F2E8D8; font-size: 24px; font-weight: bold; }
+
+.RankName { color: #D6AB72; font-size: 20px; margin-top: 13px; }
+.RatingLine { flow-children: right; margin-top: 1px; }
+.RatingValue { color: #F6EFE3; font-size: 56px; font-weight: bold; }
+.RatingSuffix { color: #9CA6A1; font-size: 16px; font-weight: bold; margin-left: 9px; vertical-align: bottom; margin-bottom: 11px; }
+
+.CalibrationBox { width: 100%; flow-children: down; margin-top: 13px; }
+.CalibrationLabels { width: 100%; flow-children: right; }
+.SmallLabel { width: fill-parent-flow(1.0); color: #B4BFBB; font-size: 15px; }
+.CalibrationValue { color: #D5AB74; font-size: 15px; }
+.ProgressTrack { width: 100%; height: 5px; margin-top: 7px; background-color: #101617; }
+.ProgressFill { width: 0%; height: 100%; background-color: gradient(linear, 0% 0%, 100% 0%, from(#795C3B), to(#D9AD72)); }
+
+.RecordLine { flow-children: right; margin-top: 16px; }
+.RecordWins { font-size: 16px; color: #95C2A9; margin-right: 20px; }
+.RecordLosses { font-size: 16px; color: #D39A92; }
+
+.RoleRow { width: 100%; flow-children: right; margin-top: 6px; }
+.RoleButton {
+    width: fill-parent-flow(1.0);
+    height: 41px;
+    margin-left: 6px;
+    background-color: #22292C;
+    border: 1px solid #485250;
+}
+.RoleButtonFirst, .RoleButtonWide { margin-left: 0px; }
+.RoleButton Label {
+    horizontal-align: center;
+    vertical-align: center;
+    text-align: center;
+    font-size: 15px;
+    color: #C0CBC6;
+    text-overflow: shrink;
+}
+.RoleButton:hover { background-color: #35433D; border: 1px solid #91A79B; }
+.SelectedRole, .SelectedRole:hover { background-color: #3D4540; border: 1px solid #C09761; }
+.SelectedRole Label { color: #F3DCAD; }
+.RoleButton:disabled { opacity: 0.57; }
+
+.PrimaryButton {
+    height: 50px;
+    background-color: gradient(linear, 0% 0%, 0% 100%, from(#9B563D), to(#60332C));
+    border: 1px solid #CD8C60;
+    brightness: 1.0;
+    transition-property: brightness;
+    transition-duration: 0.12s;
+}
+.PrimaryButton:hover { brightness: 1.22; }
+.PrimaryButton:active { brightness: 0.84; }
+.PrimaryButton:disabled { opacity: 0.55; }
+.PrimaryButton Label {
+    horizontal-align: center;
+    vertical-align: center;
+    font-size: 20px;
+    color: #FFF1DF;
+    font-weight: bold;
+}
+
+.SecondaryButton {
+    height: 37px;
+    padding: 0px 14px;
+    background-color: #242C2E;
+    border: 1px solid #586260;
+}
+.SecondaryButton:hover { background-color: #384244; }
+.SecondaryButton:disabled { opacity: 0.55; }
+.SecondaryButton Label { horizontal-align: center; vertical-align: center; color: #C7D0CC; font-size: 15px; }
+
+.QueueButton { width: 100%; margin-top: 15px; }
+.RefreshButton { vertical-align: center; }
+.HubDashboardButton { vertical-align: center; margin-left: 10px; }
+.CancelButton { width: 100%; margin-top: 7px; }
+
+.HubTabs {
+    width: 100%;
+    flow-children: right;
+    border-bottom: 1px solid #49514E;
+}
+
+.HubTab {
+    height: 43px;
+    padding: 0 12px;
+    margin-right: 10px;
+    border-bottom: 2px solid transparent;
+}
+
+.HubTab Label { color: #AAB7B2; font-size: 22px; font-weight: bold; vertical-align: center; }
+.HubTab:hover Label { color: #F5E8D3; }
+.HubTabSelected { border-bottom: 2px solid #C89D65; }
+.HubTabSelected Label { color: #F2E8D8; }
+
+.HubPane { width: 100%; height: fill-parent-flow(1.0); flow-children: down; }
+.SettingsNote { width: 100%; color: #B0BDB6; font-size: 17px; margin-top: 16px; }
+.SettingsScroll { width: 100%; height: fill-parent-flow(1.0); flow-children: down; overflow: squish scroll; margin-top: 8px; }
+.SettingRow { width: 100%; flow-children: down; padding: 8px 4px 9px 0; border-bottom: 1px solid #3D4647; }
+.SettingHeading { width: 100%; flow-children: right; }
+.SettingName { width: fill-parent-flow(1.0); color: #E5E0D5; font-size: 20px; }
+.SettingValue { color: #D6AB72; font-size: 18px; text-align: right; }
+.SettingDescription { width: 100%; color: #A7B5AD; font-size: 14px; }
+.SettingSlider { width: 100%; height: 26px; margin-top: 4px; }
+.SettingSlider #SliderTrack { height: 5px; width: 100%; vertical-align: center; background-color: #101617; border: 1px solid #485250; }
+.SettingSlider #SliderTrackProgress { height: 5px; vertical-align: center; background-color: #AF8755; }
+.SettingSlider #SliderThumb { width: 16px; height: 22px; vertical-align: center; background-color: #D6AB72; border: 1px solid #F0D5AD; }
+.SettingSlider:hover #SliderThumb { brightness: 1.25; }
+.SettingSlider:disabled { opacity: 0.5; }
+.SettingsActions { width: 100%; flow-children: right; margin-top: 16px; }
+.SaveSettingsButton { width: 200px; }
+.MaxSettingsButton { height: 50px; margin-left: 12px; }
+.SettingsFeedback { width: 100%; color: #B5C0B9; font-size: 15px; margin-top: 10px; min-height: 22px; }
+.SettingsFeedback.SettingsError { color: #E0A99A; }
+.SocialLeagueStats { color: #B0BDB6; font-size: 16px; margin: 14px 0 8px 0; }
+.SocialScroll { width: 100%; height: fill-parent-flow(1.0); flow-children: down; overflow: squish scroll; }
+.SocialEmpty { margin-top: 24px; }
+.SocialContacts, .SocialTies { width: 100%; flow-children: down; }
+.SocialTies { margin-top: 15px; }
+.SocialTiesTitle { font-size: 20px; margin-bottom: 4px; }
+
+.SocialRow {
+    width: 100%;
+    height: 54px;
+    padding: 0 10px;
+    flow-children: right;
+    border-bottom: 1px solid #3D4647;
+}
+
+.SocialRow:hover { background-color: #293431; }
+.SocialTieRow { height: 49px; }
+.SocialHeroIcon { width: 33px; height: 33px; vertical-align: center; margin-right: 10px; }
+.SocialIdentity { width: fill-parent-flow(1.0); vertical-align: center; flow-children: down; }
+.SocialName { width: 100%; color: #E5E0D5; font-size: 18px; text-overflow: ellipsis; }
+.SocialKind { width: 100%; color: #BCC6C0; font-size: 14px; text-overflow: ellipsis; }
+.SocialKind.Gain { color: #9DCBAD; }
+.SocialKind.Loss { color: #E1A194; }
+.SocialTotals { flow-children: down; vertical-align: center; margin-left: 12px; }
+.SocialCount { color: #B6C2BC; font-size: 14px; text-align: right; vertical-align: center; }
+
+.HistoryHeader {
+    width: 100%;
+    flow-children: right;
+    height: 36px;
+    margin-top: 20px;
+    padding: 0px 10px;
+    background-color: #191F22;
+}
+
+.HistoryHeader Label { font-size: 15px; color: #B3BEBA; vertical-align: center; }
+.HistoryList { width: 100%; height: fill-parent-flow(1.0); flow-children: down; overflow: squish scroll; }
+.HistoryRow { width: 100%; height: 60px; flow-children: right; padding: 0px 10px; border-bottom: 1px solid #3D4647; }
+.HistoryRow:hover { background-color: #293431; }
+.HistoryRow Label { font-size: 16px; vertical-align: center; text-overflow: ellipsis; }
+
+.ColResult { width: 18%; }
+.ColHero { width: 24%; }
+.ColRole { width: 21%; }
+.ColKDA { width: 16%; }
+.ColDuration { width: 11%; }
+.ColDelta { width: 10%; text-align: right; }
+.RowResult { flow-children: down; vertical-align: center; }
+.RowResult .RowOutcome { font-weight: bold; }
+.HistoryRow .RowDate { font-size: 13px; color: #9AA7A1; }
+.RowIdentity { flow-children: right; }
+.RowHeroIcon { width: 29px; height: 29px; vertical-align: center; margin-right: 8px; }
+.RowHeroName { width: fill-parent-flow(1.0); }
+.Quiet { color: #B0B9B4; }
+.Gain { color: #9DCBAD; }
+.Loss { color: #E1A194; }
+
+.HistoryEmpty { horizontal-align: center; vertical-align: center; flow-children: down; }
+.EmptyTitle { color: #D2CAC0; font-size: 22px; horizontal-align: center; }
+.EmptyNote { color: #A7B0AC; font-size: 16px; margin-top: 7px; horizontal-align: center; text-align: center; }
+
+.RosterNote { color: #B9C5BE; font-size: 17px; margin-top: 8px; }
+.Teams { width: 100%; margin-top: 25px; flow-children: right; }
+.Team { width: fill-parent-flow(1.0); flow-children: down; }
+.TeamFirst { margin-right: 14px; }
+.TeamHeading { color: #F6E9D5; font-size: 19px; padding: 9px 10px; width: 100%; }
+.Radiant { background-color: #2E463C; }
+.Dire { background-color: #533630; }
+.TeamList { width: 100%; flow-children: down; }
+.TeamRow { width: 100%; height: 56px; padding: 4px 8px; flow-children: right; border-bottom: 1px solid #3D4647; }
+.TeamRowSocial { height: 70px; }
+.TeamPlayerSocial { color: #C5AE8B; font-size: 13px; width: 100%; text-overflow: ellipsis; }
+.TeamRowProfile { width: fill-parent-flow(1.0); vertical-align: center; flow-children: down; }
+.TeamPlayerName { color: #E3E1D7; font-size: 17px; text-overflow: ellipsis; width: 100%; }
+.TeamPlayerRole { color: #B0B9B4; font-size: 14px; text-overflow: ellipsis; width: 100%; }
+.TeamRating { color: #D7AD75; font-size: 15px; vertical-align: center; margin-left: 8px; }
+
+.StatusBar { width: 100%; height: 49px; flow-children: right; }
+.StatusDot { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; vertical-align: center; background-color: #D2A266; }
+.StatusDot.StatusReady { background-color: #91B69E; }
+.StatusDot.StatusError { background-color: #DC998A; }
+.StatusText { color: #B5C0B9; font-size: 16px; vertical-align: center; width: fill-parent-flow(1.0); }
+.StatusText.StatusError { color: #E0A99A; }
+
+.LeagueResultHost { width: 100%; height: 100%; }
+.ResultCanvas { background-color: gradient(linear, 0% 0%, 100% 100%, from(#1D2928), to(#0B1015)); z-index: 100; }
+
+.ResultShell {
+    width: 820px;
+    max-width: 90%;
+    padding: 40px 52px;
+    horizontal-align: center;
+    vertical-align: center;
+    border-top: 2px solid #B28655;
+}
+.ResultEyebrow { color: #CCAB7E; font-size: 17px; horizontal-align: center; }
+.ResultTitle { color: #EEE6D9; font-size: 62px; font-weight: bold; horizontal-align: center; margin-top: 3px; }
+.ResultShell.ResultWon .ResultTitle { color: #A2CDB0; }
+.ResultShell.ResultLost .ResultTitle { color: #D79D97; }
+.ResultSubtitle { color: #B6C1BB; font-size: 19px; horizontal-align: center; text-align: center; max-width: 100%; margin-top: 4px; }
+.ResultDetails { width: 100%; flow-children: down; }
+.ResultHeroCard {
+    width: 100%;
+    margin-top: 30px;
+    padding: 16px 17px;
+    flow-children: right;
+    background-color: #1A2223;
+    border: 1px solid #3D4A46;
+}
+.ResultHeroImage { width: 72px; height: 72px; vertical-align: center; border: 1px solid #66716A; }
+.ResultHeroIcon { width: 100%; height: 100%; }
+.ResultHeroLabels { flow-children: down; vertical-align: center; margin-left: 16px; }
+.ResultHeroName { font-size: 26px; color: #EFEEE3; }
+.ResultRole { color: #AFBCB5; }
+.ResultMetrics { width: 100%; flow-children: right; margin-top: 16px; }
+.ResultMetric { width: fill-parent-flow(1.0); flow-children: down; background-color: #192122; border: 1px solid #3B4846; margin-left: 9px; padding: 12px 14px; }
+.ResultMetricStart { margin-left: 0px; }
+.ResultSmall { color: #B1BCB6; font-size: 16px; }
+.ResultMetricValue { color: #F3E8DB; font-size: 30px; font-weight: bold; margin-top: 4px; }
+.ResultMetricValue.Gain { color: #9DCBAD; }
+.ResultMetricValue.Loss { color: #E1A194; }
+.ResultRating { color: #D5BD98; font-size: 18px; horizontal-align: center; margin-top: 21px; }
+.ResultButton { width: 100%; margin-top: 24px; }
+.ResultReturnStatus { width: 100%; min-height: 23px; color: #B6C1BB; font-size: 17px; text-align: center; margin-top: 13px; }
+
+.IsHidden { visibility: collapse; }

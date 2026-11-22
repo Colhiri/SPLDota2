@@ -1,0 +1,28 @@
+<root>
+    <styles>
+        <include src="file://{resources}/styles/custom_game/offline_league_match.css" />
+    </styles>
+    <scripts>
+        <include src="file://{resources}/scripts/custom_game/offline_league_match.js" />
+    </scripts>
+    <Panel class="LeagueMatchHud LeagueLeaveHidden" hittest="false" hittestchildren="true">
+        <Button id="LeagueLeaveButton" class="LeagueLeaveButton" tabindex="0">
+            <Panel class="LeagueReturnIcon" hittest="false" />
+        </Button>
+        <Panel id="LeagueLeaveBackdrop" class="LeagueLeaveBackdrop LeagueLeaveHidden">
+            <Panel class="LeagueLeaveDialog">
+                <Label class="LeagueLeaveTitle" text="Выйти в лигу?" />
+                <Label class="LeagueLeaveDescription" text="Текущий матч будет отменён. MMR и калибровка учитывают завершённые матчи." />
+                <Label id="LeagueLeaveError" class="LeagueLeaveError LeagueLeaveHidden" />
+                <Panel class="LeagueLeaveActions">
+                    <Button id="LeagueStayButton" class="LeagueLeaveAction LeagueStayButton" tabindex="0">
+                        <Label text="Продолжить матч" />
+                    </Button>
+                    <Button id="LeagueLeaveConfirm" class="LeagueLeaveAction LeagueLeaveConfirm" tabindex="0">
+                        <Label id="LeagueLeaveConfirmLabel" text="Выйти в лигу" />
+                    </Button>
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+</root>

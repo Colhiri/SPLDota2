@@ -1,0 +1,190 @@
+<root>
+    <styles>
+        <include src="file://{resources}/styles/custom_game/offline_league.css" />
+    </styles>
+    <scripts>
+        <include src="file://{resources}/scripts/custom_game/offline_league.js" />
+        <include src="file://{resources}/scripts/custom_game/offline_league_screen.js" />
+    </scripts>
+    <Panel class="LeagueCanvas" hittest="true">
+        <Panel class="CanvasTopBevel" hittest="false" />
+        <Panel id="LeagueShell" class="LeagueShell">
+            <Panel class="PageHeader">
+                <Panel class="HeaderEmblem" hittest="false">
+                    <Panel class="HeaderEmblemMark" />
+                </Panel>
+                <Panel class="PageTitleBlock">
+                    <Label class="PageTitle" text="Локальная лига" />
+                    <Label class="PageSubtitle" text="Рейтинговые матчи 5 на 5" />
+                </Panel>
+                <Button id="RefreshButton" class="SecondaryButton RefreshButton IsHidden">
+                    <Label text="Обновить профиль" />
+                </Button>
+                <Button id="LeagueDashboardButton" class="SecondaryButton HubDashboardButton" onactivate="DOTAShowDashboard()">
+                    <Label text="Меню Dota" />
+                </Button>
+            </Panel>
+            <Panel class="LeagueBody">
+                <Panel class="Sidebar">
+                    <Panel class="Card ProfileCard">
+                        <Label class="SectionTitle" text="Твой ранг" />
+                        <Label id="MedalText" class="RankName" text="Загрузка…" />
+                        <Panel class="RatingLine">
+                            <Label id="RatingText" class="RatingValue" text="—" />
+                            <Label class="RatingSuffix" text="MMR" />
+                        </Panel>
+                        <Panel id="CalibrationBox" class="CalibrationBox">
+                            <Panel class="CalibrationLabels">
+                                <Label class="SmallLabel" text="Калибровка" />
+                                <Label id="CalibrationText" class="CalibrationValue" text="—" />
+                            </Panel>
+                            <Panel class="ProgressTrack">
+                                <Panel id="CalibrationProgress" class="ProgressFill" />
+                            </Panel>
+                        </Panel>
+                        <Panel class="RecordLine">
+                            <Label id="WinText" class="RecordWins" text="—" />
+                            <Label id="LossText" class="RecordLosses" text="—" />
+                        </Panel>
+                    </Panel>
+                    <Panel class="Card MatchCard">
+                        <Label class="SectionTitle" text="Роль в матче" />
+                        <Panel class="RoleRow">
+                            <Button id="Role0" class="RoleButton SelectedRole RoleButtonWide">
+                                <Label text="Любая роль" />
+                            </Button>
+                        </Panel>
+                        <Panel class="RoleRow">
+                            <Button id="Role1" class="RoleButton RoleButtonFirst">
+                                <Label text="Керри" />
+                            </Button>
+                            <Button id="Role2" class="RoleButton">
+                                <Label text="Мид" />
+                            </Button>
+                            <Button id="Role3" class="RoleButton">
+                                <Label text="Офлейн" />
+                            </Button>
+                        </Panel>
+                        <Panel class="RoleRow">
+                            <Button id="Role4" class="RoleButton RoleButtonFirst">
+                                <Label text="Частичная поддержка" />
+                            </Button>
+                            <Button id="Role5" class="RoleButton">
+                                <Label text="Полная поддержка" />
+                            </Button>
+                        </Panel>
+                        <Button id="QueueButton" class="PrimaryButton QueueButton" enabled="false">
+                            <Label id="QueueButtonLabel" text="Найти матч" />
+                        </Button>
+                        <Button id="CancelButton" class="SecondaryButton CancelButton IsHidden">
+                            <Label text="Отменить поиск" />
+                        </Button>
+                    </Panel>
+                </Panel>
+                <Panel id="HistoryCard" class="Card HistoryCard">
+                    <Panel class="HubTabs">
+                        <Button id="HistoryTab" class="HubTab HubTabSelected">
+                            <Label text="История матчей" />
+                        </Button>
+                        <Button id="SocialTab" class="HubTab">
+                            <Label text="Знакомые" />
+                        </Button>
+                        <Button id="SettingsTab" class="HubTab">
+                            <Label text="Сложность" />
+                        </Button>
+                    </Panel>
+                    <Panel id="HistoryPane" class="HubPane">
+                        <Panel id="HistoryHeader" class="HistoryHeader IsHidden">
+                            <Label class="ColResult" text="Итог" />
+                            <Label class="ColHero" text="Герой" />
+                            <Label class="ColRole" text="Роль" />
+                            <Label class="ColKDA" text="У / С / П" />
+                            <Label class="ColDuration" text="Время" />
+                            <Label class="ColDelta" text="MMR" />
+                        </Panel>
+                        <Panel id="HistoryList" class="HistoryList" />
+                        <Panel id="HistoryEmpty" class="HistoryEmpty" hittest="false">
+                            <Label id="HistoryEmptyTitle" class="EmptyTitle" text="Загрузка истории…" />
+                            <Label id="HistoryEmptyNote" class="EmptyNote" />
+                        </Panel>
+                    </Panel>
+                    <Panel id="SocialPane" class="HubPane IsHidden">
+                        <Label id="SocialLeagueStats" class="SocialLeagueStats" />
+                        <Panel class="SocialScroll">
+                            <Label id="SocialEmpty" class="EmptyNote SocialEmpty" text="Знакомые появятся после первого завершённого матча." />
+                            <Panel id="SocialContacts" class="SocialContacts IsHidden" />
+                            <Panel id="SocialTies" class="SocialTies IsHidden">
+                                <Label class="SectionTitle SocialTiesTitle" text="Отношения между ботами" />
+                                <Panel id="SocialTiesList" class="SocialContacts" />
+                            </Panel>
+                        </Panel>
+                    </Panel>
+                    <Panel id="SettingsPane" class="HubPane SettingsPane IsHidden">
+                        <Label class="SettingsNote" text="Общие настройки обеих команд. Применяются со следующего матча." />
+                        <Panel class="SettingsScroll">
+                            <Panel class="SettingRow">
+                                <Panel class="SettingHeading">
+                                    <Label class="SettingName" text="Уровень ботов" />
+                                    <Label id="BotDifficultyValue" class="SettingValue" text="Нечестный" />
+                                </Panel>
+                                <Slider id="BotDifficultySlider" class="SettingSlider" min="0" max="4" increment="1" value="4" />
+                                <Label class="SettingDescription" text="Штатная сложность Dota. Максимум — Нечестный." />
+                            </Panel>
+                            <Panel class="SettingRow">
+                                <Panel class="SettingHeading">
+                                    <Label class="SettingName" text="Микроконтроль" />
+                                    <Label id="MicroValue" class="SettingValue" text="100%" />
+                                </Panel>
+                                <Slider id="MicroSlider" class="SettingSlider" min="0" max="100" increment="1" value="100" />
+                                <Label class="SettingDescription" text="Частота решений при добивании и применении способностей." />
+                            </Panel>
+                            <Panel class="SettingRow">
+                                <Panel class="SettingHeading">
+                                    <Label class="SettingName" text="Командное макро" />
+                                    <Label id="MacroValue" class="SettingValue" text="100%" />
+                                </Panel>
+                                <Slider id="MacroSlider" class="SettingSlider" min="0" max="100" increment="1" value="100" />
+                                <Label class="SettingDescription" text="Частота решений тренера о ганках, пуше и защите. 0% отключает автоматические планы." />
+                            </Panel>
+                            <Panel class="SettingRow">
+                                <Panel class="SettingHeading">
+                                    <Label class="SettingName" text="Стратегические подсказки" />
+                                    <Label id="CoachValue" class="SettingValue" text="100%" />
+                                </Panel>
+                                <Slider id="CoachSlider" class="SettingSlider" min="0" max="100" increment="1" value="100" />
+                                <Label class="SettingDescription" text="Частота дополнительных запросов тренера. 0% отключает подсказки." />
+                            </Panel>
+                        </Panel>
+                        <Panel class="SettingsActions">
+                            <Button id="SaveSettingsButton" class="PrimaryButton SaveSettingsButton" enabled="false">
+                                <Label id="SaveSettingsLabel" text="Сохранить" />
+                            </Button>
+                            <Button id="MaxSettingsButton" class="SecondaryButton MaxSettingsButton">
+                                <Label text="Всё на максимум" />
+                            </Button>
+                        </Panel>
+                        <Label id="SettingsFeedback" class="SettingsFeedback" text="Все параметры по умолчанию выставлены на максимум." />
+                    </Panel>
+                </Panel>
+                <Panel id="RosterCard" class="Card HistoryCard IsHidden">
+                    <Label class="SectionTitle" text="Матч найден" />
+                    <Label id="RosterNote" class="RosterNote" />
+                    <Panel class="Teams">
+                        <Panel class="Team TeamFirst">
+                            <Label class="TeamHeading Radiant" text="Силы Света" />
+                            <Panel id="RadiantTeam" class="TeamList" />
+                        </Panel>
+                        <Panel class="Team">
+                            <Label class="TeamHeading Dire" text="Силы Тьмы" />
+                            <Panel id="DireTeam" class="TeamList" />
+                        </Panel>
+                    </Panel>
+                </Panel>
+            </Panel>
+            <Panel class="StatusBar">
+                <Panel id="StatusDot" class="StatusDot" hittest="false" />
+                <Label id="StatusText" class="StatusText" text="Загрузка профиля…" />
+            </Panel>
+        </Panel>
+    </Panel>
+</root>

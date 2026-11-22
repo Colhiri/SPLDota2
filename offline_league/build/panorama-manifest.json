@@ -1,0 +1,35 @@
+{
+  "source": {
+    "panorama/layout/custom_game/custom_ui_manifest.xml": "AC911E32C4174763FF76424064CD4D1CE0C3DC253BE969B8CCDBE93A34625752",
+    "panorama/layout/custom_game/offline_league_draft.xml": "3C5937B596B2EC5BAE7DAE5E8B1257BDCD0A94F08730410AF688054158F7C259",
+    "panorama/layout/custom_game/offline_league_match.xml": "DACD548D8A52A455648905713D708C167FE7BDAFC8239B09C42A5FFF0374FCF6",
+    "panorama/layout/custom_game/offline_league_result.xml": "A42B756A0A90B3044196275D6EFB75E330D21B868F698249EB2586477FF130BC",
+    "panorama/layout/custom_game/offline_league_setup.xml": "CD9B79E05B00EC6F586AA4573B0F0A17CD5FC0822582C50361A394EBC57679CA",
+    "panorama/layout/custom_game/offline_league_social_hud.xml": "32CB54F994DB626C39B9CDF1719C33AFFD1F41C65C8018BE8641A93975EC3F0B",
+    "panorama/scripts/custom_game/offline_league_match.js": "8A31EDE959FB2658A77EFD7CF1FBE3D90A8654870C3719860B40943F2B2F98B2",
+    "panorama/scripts/custom_game/offline_league_screen.js": "E8127912A0038B72321BE130F05073F7C155DCF9D4F3E6B13CBAD9FDA3DBEFBC",
+    "panorama/scripts/custom_game/offline_league_social_hud.js": "3AE545B21847DE7DBEF770423E953F3DB98B440BA267C2E2EC0004B386880AEC",
+    "panorama/scripts/custom_game/offline_league.js": "597E33B6585213AF19E34C609468958013D98994A78E739899F4C0B209D28311",
+    "panorama/styles/custom_game/offline_league_match.css": "38867E1CEBC1388CD6FC918A70F229C69451D5CE775F3E1CCDCDE53C91C9D5F6",
+    "panorama/styles/custom_game/offline_league_social_hud.css": "B74CAA958CE925E1D624E9D699F16DBC7058388BD6E30298B6604B1B2E2663EC",
+    "panorama/styles/custom_game/offline_league.css": "4998CE4C3AC7D74E93C4980AA0A573D81AF37972073FEF98F2B6CB879D3D45C5"
+  },
+  "resources": {
+    "panorama/layout/custom_game/custom_ui_manifest.vxml_c": "208156D3A00FF3C3554D9E50AAD560D0229F91BDDD10D6E58408FE9BD81090A0",
+    "panorama/layout/custom_game/offline_league_draft.vxml_c": "7C31AC172227CBB7811B79EAB79AEDD5DCF01CAE8C48F894158B46FE540B1888",
+    "panorama/layout/custom_game/offline_league_match.css.vxml_c": "C2B1D078DB18FEA4672DC3166E787BB9F4FD8FDA7A670C55BDF4052FA98782C5",
+    "panorama/layout/custom_game/offline_league_match.vxml_c": "C301802DC9C3040706F301894901162D247A9F1984C3BB6FEA369EB31B7BA1D6",
+    "panorama/layout/custom_game/offline_league_result.vxml_c": "16A420D3CC89331A1DB85746E8B5E8E2B94C20356383C3281BB304718B94CB4C",
+    "panorama/layout/custom_game/offline_league_setup.vxml_c": "AFBD53EED6C73C63993E303390D5E22240EB23A1AA5218FBE312EFF6735D3365",
+    "panorama/layout/custom_game/offline_league_social_hud.css.vxml_c": "40E83C781FD6ABDE0AE7C03205B911279CE6B35A9FF8403AD0579991D987F440",
+    "panorama/layout/custom_game/offline_league_social_hud.vxml_c": "84632441B0F9025AA08B303CD9C6890E41E29DC87CAA3C523B3AC43F0855765A",
+    "panorama/layout/custom_game/offline_league.css.vxml_c": "2F8AF7B12EDE4461D54877BD938D3C465AE6316B1D41C97EDEA4F339C1F0438C",
+    "panorama/scripts/custom_game/offline_league_match.vjs_c": "37DA842ACA167AE3437656BF6C488E550852F5A6F8524436CFE3F15E3CF77490",
+    "panorama/scripts/custom_game/offline_league_screen.vjs_c": "E8857CC78EA3FEB61234ABCCC46E11F83CB10347095AEE55B6DAF9F7E1DA18EB",
+    "panorama/scripts/custom_game/offline_league_social_hud.vjs_c": "FB0F259673CC7ACE0522C96028DA6FBE836DD5466830D7DBB27DCEC7BE6A9945",
+    "panorama/scripts/custom_game/offline_league.vjs_c": "EEE715A557CA52CBF13103F1EB33F3EE08A5C19579196A263C4A5D064DDE6A4F",
+    "panorama/styles/custom_game/offline_league_match.vcss_c": "38E2E1E29FEB0F54EDC9E44376E3287D450AF0DC95244AAF6745DFE2444D53DD",
+    "panorama/styles/custom_game/offline_league_social_hud.vcss_c": "B27B4C39040794388B0379D875AF5021CCBE13A712AFD858F4197B6DBD977B9B",
+    "panorama/styles/custom_game/offline_league.vcss_c": "AA52DC7A4B29C95FDA6550F315BA7A700D4E6234325A6C073CAA0D2BF6259062"
+  }
+}

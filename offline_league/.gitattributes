@@ -1,0 +1,2 @@
+addon/panorama/** -text whitespace=cr-at-eol
+build/panorama/** binary

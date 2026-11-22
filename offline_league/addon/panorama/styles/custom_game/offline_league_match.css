@@ -1,0 +1,120 @@
+.LeagueMatchHud {
+    width: 100%;
+    height: 100%;
+    font-family: Radiance;
+}
+
+.LeagueLeaveHidden { visibility: collapse; }
+
+.LeagueLeaveButton {
+    width: 30px;
+    height: 30px;
+    horizontal-align: left;
+    vertical-align: top;
+    margin-left: 8px;
+    opacity: 0.5;
+    transition-property: opacity;
+    transition-duration: 0.2s;
+}
+
+.LeagueDraftHud .LeagueLeaveButton {
+    width: 32px;
+    height: 32px;
+    margin-left: 14px;
+    margin-top: 12px;
+}
+
+.LeagueLeaveButton:hover, .LeagueLeaveButton:focus { opacity: 1; }
+
+.LeagueReturnIcon {
+    width: 100%;
+    height: 100%;
+    background-image: url("s2r://panorama/images/control_icons/return_to_game_png.vtex");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    img-shadow: 0px 0px 3px 3 black;
+    wash-color: #CDF;
+    transform: scaleY(-1);
+}
+
+.LeagueLeaveAction Label {
+    horizontal-align: center;
+    vertical-align: center;
+    color: #DDD4C5;
+    font-size: 15px;
+}
+
+.LeagueLeaveBackdrop {
+    width: 100%;
+    height: 100%;
+    background-color: #080B10CD;
+    z-index: 10;
+}
+
+.LeagueLeaveDialog {
+    width: 420px;
+    max-width: 94%;
+    horizontal-align: center;
+    vertical-align: center;
+    flow-children: down;
+    padding: 22px 24px;
+    border: 1px solid #605443;
+    border-top: 2px solid #B18A61;
+    background-color: gradient(linear, 0% 0%, 100% 100%, from(#272D2C), to(#171F24));
+}
+
+.LeagueLeaveTitle {
+    color: #F4EBDD;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.LeagueLeaveDescription {
+    width: 100%;
+    margin-top: 9px;
+    color: #B8BEBA;
+    font-size: 17px;
+}
+
+.LeagueLeaveError {
+    width: 100%;
+    margin-top: 11px;
+    color: #E2A397;
+    font-size: 16px;
+}
+
+.LeagueLeaveActions {
+    width: 100%;
+    margin-top: 20px;
+    flow-children: right;
+}
+
+.LeagueLeaveAction {
+    width: fill-parent-flow(1.0);
+    height: 38px;
+    border: 1px solid #555F5C;
+    background-color: #272F30;
+}
+
+.LeagueLeaveAction:hover {
+    border-color: #9B9987;
+    background-color: #373F3F;
+}
+
+.LeagueStayButton { margin-right: 8px; }
+
+.LeagueLeaveConfirm {
+    border-color: #BB886A;
+    background-color: gradient(linear, 0% 0%, 0% 100%, from(#A25D45), to(#6E3F31));
+}
+
+.LeagueLeaveConfirm:hover {
+    border-color: #E1AD8B;
+    background-color: gradient(linear, 0% 0%, 0% 100%, from(#BC6E51), to(#814B39));
+}
+
+.LeagueLeaveAction:disabled {
+    border-color: #4E5754;
+    background-color: #303837;
+}

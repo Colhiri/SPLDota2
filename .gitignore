@@ -1,0 +1,15 @@
+__pycache__/
+/.venv/
+/runs/
+
+.env
+.env.local
+
+# Local screen-control experiments and their test fixtures
+/dota_bot/
+/gsi/
+/input/
+/native_bot/
+/vision/
+/tests/*
+!/tests/test_team_coach*.py
